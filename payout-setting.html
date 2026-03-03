@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Payout Settings - LIRA Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .payout-settings-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 30px;
+            padding: 40px;
+            margin-bottom: 30px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .page-header::before {
+            content: '⚙️';
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            font-size: 150px;
+            opacity: 0.1;
+            transform: rotate(-15deg);
+        }
+        
+        .page-header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .page-header p {
+            opacity: 0.9;
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .settings-card {
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .settings-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .card-subtitle {
+            color: var(--gray);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .setting-label i {
+            color: var(--primary);
+            width: 25px;
+        }
+        
+        .setting-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .setting-input {
+            width: 120px;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .setting-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(240, 147, 251, 0.1);
+        }
+        
+        .setting-select {
+            width: 150px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+        }
+        
+        .percentage-input {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .percentage-input span {
+            color: var(--gray);
+            font-weight: 500;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: var(--success);
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            left: 33px;
+        }
+        
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .day-checkbox {
+            text-align: center;
+        }
+        
+        .day-checkbox input {
+            display: none;
+        }
+        
+        .day-label {
+            display: block;
+            padding: 10px 5px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .day-checkbox input:checked + .day-label {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #f5f0ff 0%, #ffffff 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid var(--info);
+        }
+        
+        .preview-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            margin: 20px 0;
+        }
+        
+        .preview-title {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+        
+        .preview-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .preview-row:last-child {
+            border-bottom: none;
+        }
+        
+        .preview-label {
+            opacity: 0.9;
+        }
+        
+        .preview-value {
+            font-weight: 700;
+        }
+        
+        .preview-total {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid white;
+        }
+        
+        .slider-container {
+            margin: 20px 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, var(--primary), var(--danger));
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: var(--primary);
+        }
+        
+        .bank-details {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .bank-field {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        
+        .bank-field label {
+            width: 120px;
+            font-weight: 600;
+        }
+        
+        .bank-field input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .save-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .save-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s ease, height 0.5s ease;
+        }
+        
+        .save-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .save-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(240, 147, 251, 0.4);
+        }
+        
+        .history-log {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .log-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+        
+        .log-item:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        .log-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .log-content {
+            flex: 1;
+        }
+        
+        .log-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+        
+        .log-time {
+            font-size: 11px;
+            color: var(--gray);
+        }
+        
+        .log-user {
+            font-size: 11px;
+            color: var(--primary);
+        }
+        
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            padding: 12px 25px;
+            background: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+        
+        .tab-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 28px;
+            }
+            
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .setting-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .setting-input-group {
+                width: 100%;
+            }
+            
+            .setting-input {
+                width: 100%;
+            }
+            
+            .days-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .bank-field {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .bank-field label {
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <!-- Admin Navbar -->
+    <nav class="navbar" style="background: #1e1e2f;">
+        <div class="navbar-container">
+            <a href="/admin-dashboard" class="logo" style="color: white;">LIRA Admin</a>
+            <div class="mobile-menu-btn" style="color: white;">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="nav-menu">
+                <a href="/admin-dashboard" class="nav-link">Dashboard</a>
+                <a href="/all-member" class="nav-link">Members</a>
+                <a href="/payout" class="nav-link">Payouts</a>
+                <a href="/payout-setting" class="nav-link active">Payout Settings</a>
+                <a href="/income-settings" class="nav-link">Income</a>
+                <div class="nav-link" onclick="logout()" style="cursor: pointer;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="payout-settings-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Payout Configuration</h1>
+            <p>Configure all payout-related settings, TDS, charges, limits, and bank details</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="switchTab('general')">General Settings</button>
+            <button class="tab-btn" onclick="switchTab('limits')">Withdrawal Limits</button>
+            <button class="tab-btn" onclick="switchTab('bank')">Bank Details</button>
+            <button class="tab-btn" onclick="switchTab('history')">Change History</button>
+        </div>
+
+        <!-- General Settings Tab -->
+        <div class="tab-content active" id="generalTab">
+            <div class="settings-grid">
+                <!-- Tax & Charges Card -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fas fa-percent"></i></div>
+                        <div>
+                            <div class="card-title">Tax & Charges</div>
+                            <div class="card-subtitle">Configure TDS and admin charges</div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-landmark"></i> TDS (Tax Deducted at Source)
+                        </span>
+                        <div class="setting-input-group">
+                            <input type="number" class="setting-input" id="tdsPercent" value="10" min="0" max="100" step="0.1">
+                            <span>%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-cog"></i> Admin Charge
+                        </span>
+                        <div class="setting-input-group">
+                            <input type="number" class="setting-input" id="adminCharge" value="5" min="0" max="100" step="0.1">
+                            <span>%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-file-invoice"></i> GST on Admin Charge
+                        </span>
+                        <div class="setting-input-group">
+                            <input type="number" class="setting-input" id="gstOnCharge" value="18" min="0" max="100" step="0.1">
+                            <span>%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <i class="fas fa-info-circle" style="color: var(--info); margin-right: 10px;"></i>
+                        <strong>Note:</strong> TDS is calculated on total amount, admin charge on total amount, and GST on admin charge only.
+                    </div>
+                </div>
+
+                <!-- Processing Rules Card -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <div class="card-title">Processing Rules</div>
+                            <div class="card-subtitle">Configure auto-approve and processing time</div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-hourglass-half"></i> Processing Time
+                        </span>
+                        <div class="setting-input-group">
+                            <input type="number" class="setting-input" id="processingDays" value="2" min="1" max="30">
+                            <span>days</span>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-robot"></i> Auto Approve
+                        </span>
+                        <div class="toggle-switch" id="autoApprove" onclick="toggleSetting('autoApprove')">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row" id="autoApproveLimitRow">
+                        <span class="setting-label">
+                            <i class="fas fa-rupee-sign"></i> Auto Approve Limit
+                        </span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="autoApproveLimit" value="5000" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-shield-alt"></i> Require OTP Verification
+                        </span>
+                        <div class="toggle-switch active" id="requireOTP" onclick="toggleSetting('requireOTP')">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Withdrawal Days Card -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <div>
+                            <div class="card-title">Withdrawal Days</div>
+                            <div class="card-subtitle">Select days when withdrawals are allowed</div>
+                        </div>
+                    </div>
+                    
+                    <div class="days-grid" id="withdrawalDays">
+                        <div class="day-checkbox">
+                            <input type="checkbox" id="dayMon" value="Mon" checked>
+                            <label for="dayMon" class="day-label">Mon</label>
+                        </div>
+                        <div class="day-checkbox">
+                            <input type="checkbox" id="dayTue" value="Tue" checked>
+                            <label for="dayTue" class="day-label">Tue</label>
+                        </div>
+                        <div class="day-checkbox">
+                            <input type="checkbox" id="dayWed" value="Wed" checked>
+                            <label for="dayWed" class="day-label">Wed</label>
+                        </div>
+                        <div class="day-checkbox">
+                            <input type="checkbox" id="dayThu" value="Thu" checked>
+                            <label for="dayThu" class="day-label">Thu</label>
+                        </div>
+                        <div class="day-checkbox">
+                            <input type="checkbox" id="dayFri" value="Fri" checked>
+                            <label for="dayFri" class="day-label">Fri</label>
+                        </div>
+                        <div class="day-checkbox">
+                            <input type="checkbox" id="daySat" value="Sat">
+                            <label for="daySat" class="day-label">Sat</label>
+                        </div>
+                        <div class="day-checkbox">
+                            <input type="checkbox" id="daySun" value="Sun">
+                            <label for="daySun" class="day-label">Sun</label>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-clock"></i> Cut-off Time
+                        </span>
+                        <input type="time" class="setting-input" id="cutoffTime" value="15:00">
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-calendar-week"></i> Weekly Limit
+                        </span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="weeklyLimit" value="100000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Calculation Card -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fas fa-calculator"></i></div>
+                        <div>
+                            <div class="card-title">Preview Calculation</div>
+                            <div class="card-subtitle">See how deductions are applied</div>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-box">
+                        <div class="preview-title">For ₹10,000 Withdrawal</div>
+                        <div class="preview-row">
+                            <span class="preview-label">Requested Amount:</span>
+                            <span class="preview-value">₹10,000</span>
+                        </div>
+                        <div class="preview-row">
+                            <span class="preview-label">TDS (10%):</span>
+                            <span class="preview-value" id="previewTDS">-₹1,000</span>
+                        </div>
+                        <div class="preview-row">
+                            <span class="preview-label">Admin Charge (5%):</span>
+                            <span class="preview-value" id="previewAdmin">-₹500</span>
+                        </div>
+                        <div class="preview-row">
+                            <span class="preview-label">GST on Admin (18%):</span>
+                            <span class="preview-value" id="previewGST">-₹90</span>
+                        </div>
+                        <div class="preview-row preview-total">
+                            <span class="preview-label">Net Amount:</span>
+                            <span class="preview-value" id="previewNet">₹8,410</span>
+                        </div>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Test Amount:</span>
+                            <span id="testAmount">₹10,000</span>
+                        </div>
+                        <input type="range" class="slider" id="testSlider" min="1000" max="100000" value="10000" step="1000" oninput="updateTestAmount(this.value)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Withdrawal Limits Tab -->
+        <div class="tab-content" id="limitsTab">
+            <div class="settings-grid">
+                <!-- Amount Limits Card -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fas fa-rupee-sign"></i></div>
+                        <div>
+                            <div class="card-title">Withdrawal Amount Limits</div>
+                            <div class="card-subtitle">Set minimum and maximum withdrawal limits</div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-arrow-down"></i> Minimum Withdrawal
+                        </span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="minWithdrawal" value="500" min="1">
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-arrow-up"></i> Maximum Withdrawal
+                        </span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="maxWithdrawal" value="50000" min="1">
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-sun"></i> Daily Limit per User
+                        </span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="dailyLimit" value="50000" min="1">
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-calendar"></i> Monthly Limit per User
+                        </span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="monthlyLimit" value="200000" min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tiered Limits Card -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fas fa-layer-group"></i></div>
+                        <div>
+                            <div class="card-title">Tiered Limits</div>
+                            <div class="card-subtitle">Different limits based on franchise stage</div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-user"></i> General Member
+                        </span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="generalLimit" value="50000">
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-store"></i> Micro Franchise
+                        </span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="microLimit" value="100000">
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-store-alt"></i> Mini Franchise
+                        </span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="miniLimit" value="200000">
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-crown"></i> Max Franchise
+                        </span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="maxLimit" value="500000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Request Limits Card -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <div class="card-title">Request Limits</div>
+                            <div class="card-subtitle">Limit on number of requests</div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-hashtag"></i> Max Requests per Day
+                        </span>
+                        <div class="setting-input-group">
+                            <input type="number" class="setting-input" id="maxDailyRequests" value="3" min="1">
+                            <span>times</span>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-hourglass-start"></i> Min Time Between Requests
+                        </span>
+                        <div class="setting-input-group">
+                            <input type="number" class="setting-input" id="minRequestGap" value="24">
+                            <span>hours</span>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">
+                            <i class="fas fa-ban"></i> Cool-down Period
+                        </span>
+                        <div class="setting-input-group">
+                            <input type="number" class="setting-input" id="cooldownPeriod" value="7">
+                            <span>days</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bank Details Tab -->
+        <div class="tab-content" id="bankTab">
+            <div class="settings-grid">
+                <!-- Company Bank Account -->
+                <div class="settings-card" style="grid-column: span 2;">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fas fa-university"></i></div>
+                        <div>
+                            <div class="card-title">Company Bank Account</div>
+                            <div class="card-subtitle">Bank details for processing payouts</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bank-details">
+                        <div class="bank-field">
+                            <label>Account Holder Name:</label>
+                            <input type="text" id="bankAccountName" value="LIRA BUSINESS PVT LTD">
+                        </div>
+                        <div class="bank-field">
+                            <label>Account Number:</label>
+                            <input type="text" id="bankAccountNumber" value="12345678901">
+                        </div>
+                        <div class="bank-field">
+                            <label>Confirm Account:</label>
+                            <input type="text" id="bankAccountConfirm" value="12345678901">
+                        </div>
+                        <div class="bank-field">
+                            <label>Bank Name:</label>
+                            <input type="text" id="bankName" value="HDFC Bank">
+                        </div>
+                        <div class="bank-field">
+                            <label>Branch:</label>
+                            <input type="text" id="bankBranch" value="Mumbai Main">
+                        </div>
+                        <div class="bank-field">
+                            <label>IFSC Code:</label>
+                            <input type="text" id="bankIfsc" value="HDFC0001234">
+                        </div>
+                        <div class="bank-field">
+                            <label>SWIFT Code:</label>
+                            <input type="text" id="bankSwift" value="HDFCINBB">
+                        </div>
+                        <div class="bank-field">
+                            <label>UPI ID:</label>
+                            <input type="text" id="bankUpi" value="lira@hdfcbank">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transfer Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
+                        <div>
+                            <div class="card-title">Transfer Settings</div>
+                            <div class="card-subtitle">Configure transfer modes</div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">Default Transfer Mode</span>
+                        <select class="setting-select" id="transferMode">
+                            <option value="NEFT">NEFT</option>
+                            <option value="RTGS">RTGS</option>
+                            <option value="IMPS">IMPS</option>
+                            <option value="UPI">UPI</option>
+                            <option value="BOTH">NEFT/RTGS Both</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">Minimum for RTGS</span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="rtgsMin" value="200000">
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">Maximum for IMPS</span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="impsMax" value="500000">
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">Enable Auto Payout</span>
+                        <div class="toggle-switch" id="autoPayout" onclick="toggleSetting('autoPayout')">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fas fa-bell"></i></div>
+                        <div>
+                            <div class="card-title">Notifications</div>
+                            <div class="card-subtitle">Configure payout notifications</div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">Email Notifications</span>
+                        <div class="toggle-switch active" id="emailNotify" onclick="toggleSetting('emailNotify')">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">SMS Notifications</span>
+                        <div class="toggle-switch" id="smsNotify" onclick="toggleSetting('smsNotify')">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">WhatsApp Notifications</span>
+                        <div class="toggle-switch active" id="whatsappNotify" onclick="toggleSetting('whatsappNotify')">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span class="setting-label">Admin Alert on Large Payout</span>
+                        <div class="setting-input-group">
+                            <span>₹</span>
+                            <input type="number" class="setting-input" id="alertThreshold" value="50000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change History Tab -->
+        <div class="tab-content" id="historyTab">
+            <div class="settings-card">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fas fa-history"></i></div>
+                    <div>
+                        <div class="card-title">Settings Change History</div>
+                        <div class="card-subtitle">Track all modifications to payout settings</div>
+                    </div>
+                </div>
+                
+                <div class="history-log" id="settingsHistory">
+                    <div class="log-item">
+                        <div class="log-icon"><i class="fas fa-percent"></i></div>
+                        <div class="log-content">
+                            <div class="log-title">TDS changed from 10% to 12%</div>
+                            <div class="log-time">Today at 10:30 AM</div>
+                            <div class="log-user">by Admin (admin@lira.com)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="log-item">
+                        <div class="log-icon"><i class="fas fa-arrow-up"></i></div>
+                        <div class="log-content">
+                            <div class="log-title">Maximum withdrawal limit increased</div>
+                            <div class="log-time">Yesterday at 3:45 PM</div>
+                            <div class="log-user">by Admin (admin@lira.com)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="log-item">
+                        <div class="log-icon"><i class="fas fa-calendar"></i></div>
+                        <div class="log-content">
+                            <div class="log-title">Withdrawal days updated</div>
+                            <div class="log-time">2 days ago at 11:20 AM</div>
+                            <div class="log-user">by Admin (admin@lira.com)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="log-item">
+                        <div class="log-icon"><i class="fas fa-university"></i></div>
+                        <div class="log-content">
+                            <div class="log-title">Bank account details updated</div>
+                            <div class="log-time">5 days ago at 9:15 AM</div>
+                            <div class="log-user">by Admin (admin@lira.com)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="log-item">
+                        <div class="log-icon"><i class="fas fa-robot"></i></div>
+                        <div class="log-content">
+                            <div class="log-title">Auto-approve limit set to ₹5000</div>
+                            <div class="log-time">1 week ago at 2:30 PM</div>
+                            <div class="log-user">by Admin (admin@lira.com)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-outline" style="width: 100%; margin-top: 20px;" onclick="viewFullHistory()">
+                    <i class="fas fa-download"></i> Download Full History
+                </button>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <button class="save-btn" onclick="saveAllSettings()">
+            <i class="fas fa-save"></i> Save All Payout Settings
+        </button>
+    </div>
+
+    <script>
+        // Load settings
+        async function loadPayoutSettings() {
+            try {
+                const response = await fetch('/api/admin/settings/payout');
+                const data = await response.json();
+                
+                // General Settings
+                document.getElementById('tdsPercent').value = data.tds || 10;
+                document.getElementById('adminCharge').value = data.adminCharge || 5;
+                document.getElementById('gstOnCharge').value = data.gstOnCharge || 18;
+                document.getElementById('processingDays').value = data.processingDays || 2;
+                
+                if (data.autoApprove) document.getElementById('autoApprove').classList.add('active');
+                document.getElementById('autoApproveLimit').value = data.autoApproveLimit || 5000;
+                if (data.requireOTP) document.getElementById('requireOTP').classList.add('active');
+                
+                // Withdrawal Days
+                if (data.withdrawalDays) {
+                    document.querySelectorAll('#withdrawalDays input').forEach(cb => {
+                        cb.checked = data.withdrawalDays.includes(cb.value);
+                    });
+                }
+                
+                document.getElementById('cutoffTime').value = data.cutoffTime || '15:00';
+                document.getElementById('weeklyLimit').value = data.weeklyLimit || 100000;
+                
+                // Limits
+                document.getElementById('minWithdrawal').value = data.minWithdrawal || 500;
+                document.getElementById('maxWithdrawal').value = data.maxWithdrawal || 50000;
+                document.getElementById('dailyLimit').value = data.dailyLimit || 50000;
+                document.getElementById('monthlyLimit').value = data.monthlyLimit || 200000;
+                
+                // Tiered Limits
+                document.getElementById('generalLimit').value = data.generalLimit || 50000;
+                document.getElementById('microLimit').value = data.microLimit || 100000;
+                document.getElementById('miniLimit').value = data.miniLimit || 200000;
+                document.getElementById('maxLimit').value = data.maxLimit || 500000;
+                
+                // Request Limits
+                document.getElementById('maxDailyRequests').value = data.maxDailyRequests || 3;
+                document.getElementById('minRequestGap').value = data.minRequestGap || 24;
+                document.getElementById('cooldownPeriod').value = data.cooldownPeriod || 7;
+                
+                // Bank Details
+                document.getElementById('bankAccountName').value = data.bankAccountName || 'LIRA BUSINESS PVT LTD';
+                document.getElementById('bankAccountNumber').value = data.bankAccountNumber || '12345678901';
+                document.getElementById('bankAccountConfirm').value = data.bankAccountNumber || '12345678901';
+                document.getElementById('bankName').value = data.bankName || 'HDFC Bank';
+                document.getElementById('bankBranch').value = data.bankBranch || 'Mumbai Main';
+                document.getElementById('bankIfsc').value = data.bankIfsc || 'HDFC0001234';
+                document.getElementById('bankSwift').value = data.bankSwift || 'HDFCINBB';
+                document.getElementById('bankUpi').value = data.bankUpi || 'lira@hdfcbank';
+                
+                // Transfer Settings
+                document.getElementById('transferMode').value = data.transferMode || 'BOTH';
+                document.getElementById('rtgsMin').value = data.rtgsMin || 200000;
+                document.getElementById('impsMax').value = data.impsMax || 500000;
+                
+                if (data.autoPayout) document.getElementById('autoPayout').classList.add('active');
+                if (data.emailNotify) document.getElementById('emailNotify').classList.add('active');
+                if (data.smsNotify) document.getElementById('smsNotify').classList.add('active');
+                if (data.whatsappNotify) document.getElementById('whatsappNotify').classList.add('active');
+                
+                document.getElementById('alertThreshold').value = data.alertThreshold || 50000;
+                
+                updatePreview();
+                
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+        
+        // Update preview calculation
+        function updatePreview() {
+            const tds = parseFloat(document.getElementById('tdsPercent').value) || 0;
+            const admin = parseFloat(document.getElementById('adminCharge').value) || 0;
+            const gst = parseFloat(document.getElementById('gstOnCharge').value) || 0;
+            const amount = parseFloat(document.getElementById('testSlider').value) || 10000;
+            
+            const tdsAmount = amount * tds / 100;
+            const adminAmount = amount * admin / 100;
+            const gstAmount = adminAmount * gst / 100;
+            const netAmount = amount - tdsAmount - adminAmount - gstAmount;
+            
+            document.getElementById('previewTDS').textContent = `-₹${tdsAmount.toLocaleString()}`;
+            document.getElementById('previewAdmin').textContent = `-₹${adminAmount.toLocaleString()}`;
+            document.getElementById('previewGST').textContent = `-₹${gstAmount.toLocaleString()}`;
+            document.getElementById('previewNet').textContent = `₹${netAmount.toLocaleString()}`;
+        }
+        
+        // Update test amount from slider
+        function updateTestAmount(value) {
+            document.getElementById('testAmount').textContent = `₹${parseInt(value).toLocaleString()}`;
+            updatePreview();
+        }
+        
+        // Toggle setting
+        function toggleSetting(id) {
+            const element = document.getElementById(id);
+            element.classList.toggle('active');
+            updatePreview();
+        }
+        
+        // Switch tabs
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+        
+        // Save all settings
+        async function saveAllSettings() {
+            // Validate bank account
+            const accNo = document.getElementById('bankAccountNumber').value;
+            const accConfirm = document.getElementById('bankAccountConfirm').value;
+            
+            if (accNo !== accConfirm) {
+                alert('Bank account numbers do not match!');
+                return;
+            }
+            
+            const settings = {
+                // General Settings
+                tds: parseFloat(document.getElementById('tdsPercent').value),
+                adminCharge: parseFloat(document.getElementById('adminCharge').value),
+                gstOnCharge: parseFloat(document.getElementById('gstOnCharge').value),
+                processingDays: parseInt(document.getElementById('processingDays').value),
+                autoApprove: document.getElementById('autoApprove').classList.contains('active'),
+                autoApproveLimit: parseFloat(document.getElementById('autoApproveLimit').value),
+                requireOTP: document.getElementById('requireOTP').classList.contains('active'),
+                
+                // Withdrawal Days
+                withdrawalDays: Array.from(document.querySelectorAll('#withdrawalDays input:checked')).map(cb => cb.value),
+                cutoffTime: document.getElementById('cutoffTime').value,
+                weeklyLimit: parseFloat(document.getElementById('weeklyLimit').value),
+                
+                // Amount Limits
+                minWithdrawal: parseFloat(document.getElementById('minWithdrawal').value),
+                maxWithdrawal: parseFloat(document.getElementById('maxWithdrawal').value),
+                dailyLimit: parseFloat(document.getElementById('dailyLimit').value),
+                monthlyLimit: parseFloat(document.getElementById('monthlyLimit').value),
+                
+                // Tiered Limits
+                generalLimit: parseFloat(document.getElementById('generalLimit').value),
+                microLimit: parseFloat(document.getElementById('microLimit').value),
+                miniLimit: parseFloat(document.getElementById('miniLimit').value),
+                maxLimit: parseFloat(document.getElementById('maxLimit').value),
+                
+                // Request Limits
+                maxDailyRequests: parseInt(document.getElementById('maxDailyRequests').value),
+                minRequestGap: parseInt(document.getElementById('minRequestGap').value),
+                cooldownPeriod: parseInt(document.getElementById('cooldownPeriod').value),
+                
+                // Bank Details
+                bankAccountName: document.getElementById('bankAccountName').value,
+                bankAccountNumber: accNo,
+                bankName: document.getElementById('bankName').value,
+                bankBranch: document.getElementById('bankBranch').value,
+                bankIfsc: document.getElementById('bankIfsc').value,
+                bankSwift: document.getElementById('bankSwift').value,
+                bankUpi: document.getElementById('bankUpi').value,
+                
+                // Transfer Settings
+                transferMode: document.getElementById('transferMode').value,
+                rtgsMin: parseFloat(document.getElementById('rtgsMin').value),
+                impsMax: parseFloat(document.getElementById('impsMax').value),
+                autoPayout: document.getElementById('autoPayout').classList.contains('active'),
+                
+                // Notifications
+                emailNotify: document.getElementById('emailNotify').classList.contains('active'),
+                smsNotify: document.getElementById('smsNotify').classList.contains('active'),
+                whatsappNotify: document.getElementById('whatsappNotify').classList.contains('active'),
+                alertThreshold: parseFloat(document.getElementById('alertThreshold').value)
+            };
+            
+            try {
+                const response = await fetch('/api/admin/settings/payout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ All payout settings saved successfully!');
+                    
+                    // Add to history
+                    addToHistory('Settings updated', 'All payout settings were updated');
+                }
+                
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                alert('❌ Failed to save settings. Please try again.');
+            }
+        }
+        
+        // Add to history
+        function addToHistory(title, description) {
+            const historyLog = document.getElementById('settingsHistory');
+            const now = new Date();
+            
+            const logItem = document.createElement('div');
+            logItem.className = 'log-item';
+            logItem.innerHTML = `
+                <div class="log-icon"><i class="fas fa-edit"></i></div>
+                <div class="log-content">
+                    <div class="log-title">${title}</div>
+                    <div class="log-time">${now.toLocaleDateString()} at ${now.toLocaleTimeString()}</div>
+                    <div class="log-user">by Admin</div>
+                </div>
+            `;
+            
+            historyLog.insertBefore(logItem, historyLog.firstChild);
+        }
+        
+        // View full history
+        function viewFullHistory() {
+            window.location.href = '/api/admin/settings/payout/history';
+        }
+        
+        // Logout
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/admin-login';
+            }
+        }
+        
+        // Add input listeners
+        document.getElementById('tdsPercent').addEventListener('input', updatePreview);
+        document.getElementById('adminCharge').addEventListener('input', updatePreview);
+        document.getElementById('gstOnCharge').addEventListener('input', updatePreview);
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPayoutSettings();
+        });
+    </script>
+</body>
+</html>
