@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>LIRA - Premium MLM E-commerce</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        /* Additional Index Page Specific Styles */
+        .hero-section {
+            min-height: 90vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .floating-products {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .floating-products i {
+            position: absolute;
+            color: rgba(255,255,255,0.1);
+            font-size: 60px;
+            animation: float 6s infinite;
+        }
+        
+        .floating-products i:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+        .floating-products i:nth-child(2) { top: 60%; right: 15%; animation-delay: 1s; }
+        .floating-products i:nth-child(3) { bottom: 20%; left: 20%; animation-delay: 2s; }
+        .floating-products i:nth-child(4) { top: 30%; right: 25%; animation-delay: 3s; }
+        .floating-products i:nth-child(5) { bottom: 40%; left: 40%; animation-delay: 4s; }
+        
+        .category-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 40px 0;
+        }
+        
+        .category-tab {
+            padding: 12px 30px;
+            background: white;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            border: 2px solid transparent;
+        }
+        
+        .category-tab:hover,
+        .category-tab.active {
+            background: var(--gradient-1);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .birthday-section {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            padding: 40px;
+            border-radius: 30px;
+            margin: 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .birthday-section::before {
+            content: '🎂';
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            font-size: 150px;
+            opacity: 0.2;
+            transform: rotate(-15deg);
+        }
+        
+        .birthday-card {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 10px;
+            animation: bounce 2s infinite;
+        }
+        
+        .anniversary-section {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 40px;
+            border-radius: 30px;
+            margin: 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .anniversary-section::before {
+            content: '💑';
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            font-size: 150px;
+            opacity: 0.2;
+            transform: rotate(-15deg);
+        }
+        
+        .leaderboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .leader-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .leader-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .leader-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--gradient-1);
+        }
+        
+        .leader-card.gold::before {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        }
+        
+        .leader-card.silver::before {
+            background: linear-gradient(135deg, #C0C0C0 0%, #A9A9A9 100%);
+        }
+        
+        .leader-avatar {
+            width: 100px;
+            height: 100px;
+            background: var(--gradient-1);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+            font-weight: 700;
+            border: 4px solid white;
+            box-shadow: var(--shadow);
+        }
+        
+        .leader-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .leader-amount {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .leader-badge {
+            display: inline-block;
+            padding: 5px 20px;
+            background: var(--gradient-1);
+            color: white;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .reward-progress {
+            margin-top: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-1);
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+        
+        .news-ticker {
+            background: white;
+            padding: 15px;
+            border-radius: 50px;
+            box-shadow: var(--shadow);
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .ticker-content {
+            display: flex;
+            animation: ticker 20s linear infinite;
+        }
+        
+        .ticker-item {
+            white-space: nowrap;
+            padding: 0 30px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .ticker-item i {
+            margin-right: 10px;
+            color: var(--success);
+        }
+        
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 36px;
+            }
+            
+            .category-tab {
+                padding: 8px 20px;
+                font-size: 14px;
+            }
+            
+            .leaderboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="logo animate__animated animate__fadeIn">LIRA</a>
+            <div class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="nav-menu">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="/products" class="nav-link">Products</a>
+                <a href="/franchise" class="nav-link">Franchise</a>
+                <a href="/about" class="nav-link">About</a>
+                <a href="/contact" class="nav-link">Contact</a>
+                <a href="/login" class="btn btn-outline">Login</a>
+                <a href="/register" class="btn btn-primary">Join Now</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="floating-products">
+            <i class="fas fa-ring"></i>
+            <i class="fas fa-gem"></i>
+            <i class="fas fa-crown"></i>
+            <i class="fas fa-clock"></i>
+            <i class="fas fa-gift"></i>
+        </div>
+        <div class="hero-content">
+            <h1 class="hero-title animate__animated animate__fadeInUp">
+                Welcome to <span style="background: linear-gradient(135deg, #fff 0%, #ffd700 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">LIRA</span>
+            </h1>
+            <p class="hero-subtitle animate__animated animate__fadeInUp animate__delay-1s">
+                India's Most Trusted MLM E-commerce Platform. Earn While You Shop!
+            </p>
+            <div class="hero-buttons animate__animated animate__fadeInUp animate__delay-2s">
+                <a href="/register" class="btn btn-primary">Start Earning Now</a>
+                <a href="/products" class="btn btn-outline" style="color: white; border-color: white;">Explore Products</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- News Ticker -->
+    <div class="dashboard-container">
+        <div class="news-ticker">
+            <div class="ticker-content" id="newsTicker">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Birthday & Anniversary Section -->
+    <div class="dashboard-container">
+        <div class="birthday-section animate__animated animate__fadeIn">
+            <h2 style="font-size: 36px; color: white; margin-bottom: 20px;">🎉 Happy Birthday!</h2>
+            <div id="birthdayList" class="birthday-list">
+                <!-- Dynamic birthday list will be loaded here -->
+            </div>
+        </div>
+
+        <div class="anniversary-section animate__animated animate__fadeIn animate__delay-1s">
+            <h2 style="font-size: 36px; color: white; margin-bottom: 20px;">💑 Happy Anniversary!</h2>
+            <div id="anniversaryList" class="anniversary-list">
+                <!-- Dynamic anniversary list will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="dashboard-container">
+        <div class="category-tabs" id="categoryTabs">
+            <div class="category-tab active" data-category="all">All Products</div>
+            <!-- Categories will be loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <section class="products-section">
+        <div class="dashboard-container">
+            <h2 class="section-title">Our Premium Collection</h2>
+            <p class="section-subtitle">Discover our exclusive range of products with amazing rewards</p>
+            
+            <div class="product-grid" id="productGrid">
+                <!-- Products will be loaded dynamically -->
+                <div class="loader" style="display: none;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Leaderboard Section -->
+    <section class="products-section" style="background: #f8f9fa;">
+        <div class="dashboard-container">
+            <h2 class="section-title">Top Performers</h2>
+            <p class="section-subtitle">Meet our star performers who are leading the LIRA family</p>
+            
+            <div class="leaderboard">
+                <!-- Man of the Day -->
+                <div class="leader-card gold animate__animated animate__fadeInLeft">
+                    <div class="leader-avatar">👑</div>
+                    <div class="leader-name" id="manOfDay">Loading...</div>
+                    <div class="leader-amount" id="dayAmount">₹0</div>
+                    <div class="leader-badge">Man of the Day</div>
+                </div>
+                
+                <!-- Man of the Month -->
+                <div class="leader-card silver animate__animated animate__fadeInUp">
+                    <div class="leader-avatar">⭐</div>
+                    <div class="leader-name" id="manOfMonth">Loading...</div>
+                    <div class="leader-amount" id="monthAmount">₹0</div>
+                    <div class="leader-badge">Man of the Month</div>
+                </div>
+                
+                <!-- Man of the Year -->
+                <div class="leader-card animate__animated animate__fadeInRight">
+                    <div class="leader-avatar">🏆</div>
+                    <div class="leader-name" id="manOfYear">Loading...</div>
+                    <div class="leader-amount" id="yearAmount">₹0</div>
+                    <div class="leader-badge">Man of the Year</div>
+                </div>
+            </div>
+
+            <!-- Top 10 Buyers -->
+            <h3 style="font-size: 28px; margin: 40px 0 20px;">Top 10 Buyers</h3>
+            <div class="table-container">
+                <table class="table" id="topBuyersTable">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>User</th>
+                            <th>Name</th>
+                            <th>Total Purchase</th>
+                            <th>Rewards</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topBuyersList">
+                        <!-- Top buyers will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rewards Section -->
+    <section class="products-section">
+        <div class="dashboard-container">
+            <h2 class="section-title">Exclusive Rewards</h2>
+            <p class="section-subtitle">Unlock amazing rewards with every purchase</p>
+            
+            <div class="product-grid" id="rewardsGrid">
+                <!-- Rewards will be loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="background: var(--dark); color: white; padding: 60px 0 20px;">
+        <div class="dashboard-container">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 40px;">
+                <div>
+                    <h3 style="color: white; margin-bottom: 20px;">LIRA</h3>
+                    <p style="color: rgba(255,255,255,0.7);">India's Premier MLM E-commerce Platform</p>
+                </div>
+                <div>
+                    <h4 style="color: white; margin-bottom: 20px;">Quick Links</h4>
+                    <ul style="list-style: none;">
+                        <li><a href="/about" style="color: rgba(255,255,255,0.7); text-decoration: none;">About Us</a></li>
+                        <li><a href="/contact" style="color: rgba(255,255,255,0.7); text-decoration: none;">Contact</a></li>
+                        <li><a href="/terms" style="color: rgba(255,255,255,0.7); text-decoration: none;">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: white; margin-bottom: 20px;">Contact Info</h4>
+                    <p style="color: rgba(255,255,255,0.7);"><i class="fas fa-phone"></i> +91 9876543210</p>
+                    <p style="color: rgba(255,255,255,0.7);"><i class="fas fa-envelope"></i> support@lira.com</p>
+                </div>
+            </div>
+            <div style="text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <p style="color: rgba(255,255,255,0.5);">&copy; 2024 LIRA. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Index Page Specific JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+            loadCategories();
+            loadTopBuyers();
+            loadTodaySpecials();
+            loadRewards();
+            loadNewsTicker();
+            
+            // Mobile menu toggle
+            document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
+                document.querySelector('.nav-menu').classList.toggle('active');
+            });
+        });
+
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                const data = await response.json();
+                
+                const grid = document.getElementById('productGrid');
+                grid.innerHTML = '';
+                
+                data.products.forEach(product => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card animate__animated animate__fadeIn';
+                    card.innerHTML = `
+                        <span class="product-badge">New</span>
+                        <img src="${product.images[0] || 'https://via.placeholder.com/300'}" alt="${product.name}" class="product-image">
+                        <div class="product-info">
+                            <h3 class="product-name">${product.name}</h3>
+                            <div class="product-price">₹${product.price}</div>
+                            <div class="product-meta">
+                                <span><i class="fas fa-weight-hanging"></i> ${product.weight}g</span>
+                                <span><i class="fas fa-gem"></i> ${product.purity}</span>
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn btn-primary" onclick="addToCart('${product.productId}')">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                                <button class="btn btn-outline" onclick="viewProduct('${product.productId}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/categories');
+                const categories = await response.json();
+                
+                const tabs = document.getElementById('categoryTabs');
+                categories.forEach(category => {
+                    const tab = document.createElement('div');
+                    tab.className = 'category-tab';
+                    tab.setAttribute('data-category', category.name);
+                    tab.textContent = category.name;
+                    tab.onclick = () => filterByCategory(category.name);
+                    tabs.appendChild(tab);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        async function filterByCategory(category) {
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-category') === category) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            try {
+                const response = await fetch(`/api/products?category=${category}`);
+                const data = await response.json();
+                
+                const grid = document.getElementById('productGrid');
+                grid.innerHTML = '';
+                
+                data.products.forEach(product => {
+                    // Re-render products
+                });
+            } catch (error) {
+                console.error('Error filtering products:', error);
+            }
+        }
+
+        async function loadTopBuyers() {
+            try {
+                const response = await fetch('/api/top-buyers');
+                const buyers = await response.json();
+                
+                const tbody = document.getElementById('topBuyersList');
+                tbody.innerHTML = '';
+                
+                buyers.forEach((buyer, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>#${index + 1}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 40px; height: 40px; background: var(--gradient-1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                                    ${buyer.name.charAt(0)}
+                                </div>
+                                <span>${buyer.userId}</span>
+                            </div>
+                        </td>
+                        <td>${buyer.name}</td>
+                        <td><strong>₹${buyer.totalPurchase}</strong></td>
+                        <td>
+                            <span class="badge" style="background: ${index < 3 ? '#FFD700' : '#C0C0C0'}; color: ${index < 3 ? '#000' : '#fff'}; padding: 5px 15px; border-radius: 50px;">
+                                ${index === 0 ? '🥇 Gold' : index === 1 ? '🥈 Silver' : index === 2 ? '🥉 Bronze' : '🏅 Rising Star'}
+                            </span>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading top buyers:', error);
+            }
+        }
+
+        async function loadTodaySpecials() {
+            try {
+                const response = await fetch('/api/today-special');
+                const data = await response.json();
+                
+                const birthdayList = document.getElementById('birthdayList');
+                birthdayList.innerHTML = '';
+                data.birthdays.forEach(user => {
+                    const card = document.createElement('div');
+                    card.className = 'birthday-card';
+                    card.innerHTML = `
+                        <i class="fas fa-birthday-cake" style="font-size: 24px; color: #ff6b6b;"></i>
+                        <h3>${user.name}</h3>
+                        <p>${user.userId}</p>
+                    `;
+                    birthdayList.appendChild(card);
+                });
+                
+                const anniversaryList = document.getElementById('anniversaryList');
+                anniversaryList.innerHTML = '';
+                data.anniversaries.forEach(user => {
+                    const card = document.createElement('div');
+                    card.className = 'birthday-card';
+                    card.innerHTML = `
+                        <i class="fas fa-heart" style="font-size: 24px; color: #ff6b6b;"></i>
+                        <h3>${user.name}</h3>
+                        <p>${user.userId}</p>
+                    `;
+                    anniversaryList.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading today specials:', error);
+            }
+        }
+
+        async function loadRewards() {
+            try {
+                const response = await fetch('/api/rewards');
+                const rewards = await response.json();
+                
+                const grid = document.getElementById('rewardsGrid');
+                grid.innerHTML = '';
+                
+                rewards.forEach(reward => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card';
+                    card.innerHTML = `
+                        <img src="${reward.image || 'https://via.placeholder.com/300'}" alt="${reward.name}" class="product-image">
+                        <div class="product-info">
+                            <h3 class="product-name">${reward.name}</h3>
+                            <p class="product-price">Min Purchase: ₹${reward.minPurchase}</p>
+                            <p style="color: var(--gray); font-size: 14px;">${reward.description}</p>
+                            <div class="reward-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${reward.progress || 0}%"></div>
+                                </div>
+                                <p style="font-size: 12px; text-align: right;">${reward.current || 0}/${reward.target}</p>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading rewards:', error);
+            }
+        }
+
+        async function loadNewsTicker() {
+            const ticker = document.getElementById('newsTicker');
+            const news = [
+                '🎉 New member joined: Rahul just earned ₹5000!',
+                '🏆 Micro Franchise achieved by Priya!',
+                '💰 Record breaking purchase of ₹1,00,000 by Amit!',
+                '🎂 Happy Birthday to our 10 members today!',
+                '🚀 LIRA crosses 10,000 active members!'
+            ];
+            
+            news.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'ticker-item';
+                div.innerHTML = `<i class="fas fa-star"></i> ${item}`;
+                ticker.appendChild(div);
+            });
+        }
+
+        async function addToCart(productId) {
+            const session = await fetch('/api/session').then(r => r.json());
+            if (!session.loggedIn) {
+                if (confirm('Please login to add items to cart')) {
+                    window.location.href = '/login';
+                }
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/cart/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId, quantity: 1 })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Product added to cart!', 'success');
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+            }
+        }
+
+        function viewProduct(productId) {
+            window.location.href = `/product-details.html?id=${productId}`;
+        }
+
+        function showToast(message, type) {
+            // Toast implementation
+            alert(message); // Temporary, replace with proper toast
+        }
+    </script>
+</body>
+</html>
