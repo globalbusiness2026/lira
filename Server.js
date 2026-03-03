@@ -805,7 +805,7 @@ function generateBirthdayEmail(name) {
 
 // ==================== USER ROUTES ====================
 
-// Register
+// ✅ FIXED: Register with PLAIN TEXT password
 app.post('/api/register', async (req, res) => {
     try {
         const { sponsorId, name, mobile, email, position } = req.body;
@@ -836,17 +836,17 @@ app.post('/api/register', async (req, res) => {
         // Generate user ID
         const userId = generateUserId();
         
-        // Hash password (mobile number as default)
-        const hashedPassword = await bcrypt.hash(mobile, 10);
+        // 🔑 PLAIN TEXT PASSWORD (mobile number as password)
+        const plainPassword = mobile;
         
-        // Create user
+        // Create user with plain text password
         const user = await User.create({
             userId,
             sponsorId,
             name,
             mobile,
             email,
-            password: hashedPassword,
+            password: plainPassword, // ← PLAIN TEXT
             position,
             joinDate: new Date(),
             expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
@@ -898,13 +898,13 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid User ID' });
         }
         
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
+        // Direct string comparison for plain text
+        if (password !== user.password) {
             return res.status(400).json({ error: 'Invalid Password' });
         }
         
         // Check if password needs change (if still mobile number)
-        const isDefaultPassword = await bcrypt.compare(user.mobile, user.password);
+        const isDefaultPassword = (password === user.mobile);
         
         // Create session
         req.session.userId = user.userId;
@@ -1037,11 +1037,10 @@ app.post('/api/reset-password', async (req, res) => {
             return res.status(400).json({ error: 'Invalid OTP' });
         }
         
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        
+        // Store plain text password
         await User.findOneAndUpdate(
             { userId: req.session.resetUserId },
-            { password: hashedPassword }
+            { password: newPassword } // Plain text
         );
         
         // Clear session data
@@ -1068,13 +1067,12 @@ app.post('/api/change-password', async (req, res) => {
         
         const user = await User.findOne({ userId: req.session.userId });
         
-        const validPassword = await bcrypt.compare(currentPassword, user.password);
-        if (!validPassword) {
+        // Plain text comparison
+        if (currentPassword !== user.password) {
             return res.status(400).json({ error: 'Current password is incorrect' });
         }
         
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedPassword;
+        user.password = newPassword; // Plain text
         await user.save();
         
         res.json({ success: true, message: 'Password changed successfully' });
@@ -2518,7 +2516,7 @@ app.get('/api/icard/download', async (req, res) => {
 
 // ==================== ADMIN ROUTES ====================
 
-// Admin Login
+// ✅ FIXED: Admin Login with PLAIN TEXT comparison
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { userId, password } = req.body;
@@ -2528,8 +2526,8 @@ app.post('/api/admin/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid admin credentials' });
         }
         
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
+        // PLAIN TEXT COMPARISON
+        if (password !== user.password) {
             return res.status(400).json({ error: 'Invalid admin credentials' });
         }
         
@@ -3788,19 +3786,19 @@ async function initializeSettings() {
 async function initializeAdmin() {
     const adminExists = await User.findOne({ role: 'admin' });
     if (!adminExists) {
-        const hashedPassword = await bcrypt.hash('admin@123', 10);
         await User.create({
             userId: 'ADMIN001',
             sponsorId: 'SYSTEM',
             name: 'Administrator',
             mobile: '9999999999',
             email: 'admin@lira.com',
-            password: hashedPassword,
+            password: 'admin@123', // Plain text password
             position: 'left',
             role: 'admin',
-            status: 'active'
+            status: 'active',
+            joinDate: new Date()
         });
-        console.log('✅ Default admin created');
+        console.log('✅ Default admin created with plain text password');
     }
 }
 
