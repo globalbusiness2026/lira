@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Income History - LIRA</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .income-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.5s ease;
+        }
+        
+        .page-header h1 {
+            font-size: 42px;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .income-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .summary-card {
+            background: white;
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        .summary-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-1);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .summary-label {
+            color: var(--gray);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .summary-sub {
+            font-size: 12px;
+            color: var(--success);
+            margin-top: 5px;
+        }
+        
+        .filter-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-select:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .date-range {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .date-input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .income-chart {
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            height: 400px;
+            position: relative;
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 300px;
+        }
+        
+        .income-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .income-tab {
+            padding: 10px 25px;
+            background: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+        
+        .income-tab:hover,
+        .income-tab.active {
+            background: var(--gradient-1);
+            color: white;
+        }
+        
+        .income-list {
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .income-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .income-item:hover {
+            background: #f8f9fa;
+            transform: translateX(10px);
+            border-radius: 15px;
+        }
+        
+        .income-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--gradient-1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+        
+        .income-icon.lapsed {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .income-content {
+            flex: 1;
+        }
+        
+        .income-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .income-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: var(--gray);
+        }
+        
+        .income-meta i {
+            margin-right: 5px;
+        }
+        
+        .income-amount {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .income-amount.credited {
+            color: var(--success);
+        }
+        
+        .income-amount.lapsed {
+            color: var(--danger);
+        }
+        
+        .income-status {
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-credited {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-lapsed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .page-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+        
+        .page-btn:hover,
+        .page-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .stat-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border-radius: 50px;
+            font-size: 14px;
+            color: var(--dark);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .stat-badge i {
+            color: var(--primary);
+            margin-right: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 32px;
+            }
+            
+            .income-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .income-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .income-meta {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .filter-section {
+                flex-direction: column;
+            }
+            
+            .date-range {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .date-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="logo">LIRA</a>
+            <div class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="nav-menu">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/products" class="nav-link">Shop</a>
+                <a href="/team" class="nav-link">Team</a>
+                <a href="/income-history" class="nav-link active">Income</a>
+                <a href="/fund-request" class="nav-link">Add Fund</a>
+                <a href="/member-message" class="nav-link">
+                    <i class="fas fa-comment"></i>
+                    <span class="message-badge" id="unreadCount">0</span>
+                </a>
+                <div class="nav-link" onclick="logout()" style="cursor: pointer;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="income-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Income History</h1>
+            <p>Track all your earnings, commissions, and bonuses</p>
+        </div>
+
+        <!-- Income Summary -->
+        <div class="income-summary">
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="summary-label">Total Credited</div>
+                <div class="summary-value" id="totalCredited">₹0</div>
+                <div class="summary-sub">Lifetime earnings</div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="summary-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="summary-label">Total Lapsed</div>
+                <div class="summary-value" id="totalLapsed">₹0</div>
+                <div class="summary-sub" style="color: var(--danger);">Due to inactive uplines</div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="summary-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <i class="fas fa-calendar-week"></i>
+                </div>
+                <div class="summary-label">This Month</div>
+                <div class="summary-value" id="monthIncome">₹0</div>
+                <div class="summary-sub">+12.5% from last month</div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="summary-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <div class="summary-label">Next Level Target</div>
+                <div class="summary-value" id="levelTarget">₹5,000</div>
+                <div class="summary-sub">Need ₹2,500 more</div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+            <span class="stat-badge">
+                <i class="fas fa-users"></i> From Team: 12 members
+            </span>
+            <span class="stat-badge">
+                <i class="fas fa-trophy"></i> Top Level: 5
+            </span>
+            <span class="stat-badge">
+                <i class="fas fa-star"></i> Active Days: 45
+            </span>
+        </div>
+
+        <!-- Income Chart -->
+        <div class="income-chart">
+            <h3 style="margin-bottom: 20px;">Income Growth</h3>
+            <div class="chart-container">
+                <canvas id="incomeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-group">
+                <select class="filter-select" id="typeFilter">
+                    <option value="all">All Income Types</option>
+                    <option value="direct">Direct Income</option>
+                    <option value="level">Level Income</option>
+                    <option value="matching">Matching Bonus</option>
+                    <option value="delivery">Delivery Commission</option>
+                    <option value="royalty">Royalty</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="credited">Credited</option>
+                    <option value="lapsed">Lapsed</option>
+                </select>
+            </div>
+            
+            <div class="date-range">
+                <input type="date" class="date-input" id="fromDate">
+                <span>to</span>
+                <input type="date" class="date-input" id="toDate">
+            </div>
+            
+            <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+            <button class="btn btn-outline" onclick="resetFilters()">Reset</button>
+        </div>
+
+        <!-- Income Tabs -->
+        <div class="income-tabs">
+            <button class="income-tab active" onclick="filterByType('all')">All</button>
+            <button class="income-tab" onclick="filterByType('direct')">Direct</button>
+            <button class="income-tab" onclick="filterByType('level')">Level</button>
+            <button class="income-tab" onclick="filterByType('matching')">Matching</button>
+            <button class="income-tab" onclick="filterByType('delivery')">Delivery</button>
+            <button class="income-tab" onclick="filterByType('royalty')">Royalty</button>
+        </div>
+
+        <!-- Income List -->
+        <div class="income-list" id="incomeList">
+            <div class="loader"></div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination">
+            <button class="page-btn" onclick="changePage(1)">1</button>
+            <button class="page-btn" onclick="changePage(2)">2</button>
+            <button class="page-btn" onclick="changePage(3)">3</button>
+            <button class="page-btn" onclick="changePage(4)">4</button>
+            <button class="page-btn" onclick="changePage(5)">5</button>
+        </div>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        let currentPage = 1;
+        let currentFilter = 'all';
+        let chart = null;
+        
+        // Check authentication
+        async function checkAuth() {
+            const session = await fetch('/api/session').then(r => r.json());
+            if (!session.loggedIn) {
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+        
+        // Load income history
+        async function loadIncomeHistory(page = 1, type = 'all', status = 'all') {
+            try {
+                const response = await fetch(`/api/income-history?page=${page}&type=${type}&status=${status}`);
+                const data = await response.json();
+                
+                // Update totals
+                document.getElementById('totalCredited').textContent = `₹${data.totalCredited.toLocaleString()}`;
+                document.getElementById('totalLapsed').textContent = `₹${data.totalLapsed.toLocaleString()}`;
+                
+                // Calculate month income
+                const now = new Date();
+                const monthIncome = data.incomes
+                    .filter(i => new Date(i.date).getMonth() === now.getMonth())
+                    .reduce((sum, i) => sum + (i.status === 'credited' ? i.amount : 0), 0);
+                document.getElementById('monthIncome').textContent = `₹${monthIncome.toLocaleString()}`;
+                
+                // Update income list
+                const container = document.getElementById('incomeList');
+                container.innerHTML = '';
+                
+                if (!data.incomes || data.incomes.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--gray);">No income records found</p>';
+                    return;
+                }
+                
+                data.incomes.forEach(income => {
+                    const item = document.createElement('div');
+                    item.className = 'income-item';
+                    item.innerHTML = `
+                        <div class="income-icon ${income.status === 'lapsed' ? 'lapsed' : ''}">
+                            <i class="fas fa-${getIncomeIcon(income.type)}"></i>
+                        </div>
+                        <div class="income-content">
+                            <div class="income-title">${formatIncomeType(income.type)} ${income.level ? '- Level ' + income.level : ''}</div>
+                            <div class="income-meta">
+                                <span><i class="far fa-calendar"></i> ${new Date(income.date).toLocaleDateString()}</span>
+                                <span><i class="far fa-clock"></i> ${new Date(income.date).toLocaleTimeString()}</span>
+                                ${income.fromUserId ? `<span><i class="fas fa-user"></i> From: ${income.fromUserId}</span>` : ''}
+                                ${income.orderId ? `<span><i class="fas fa-shopping-cart"></i> Order: ${income.orderId}</span>` : ''}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="income-amount ${income.status}">
+                                ${income.status === 'lapsed' ? '-' : '+'} ₹${income.amount.toLocaleString()}
+                            </div>
+                            <div class="income-status status-${income.status}">
+                                ${income.status.charAt(0).toUpperCase() + income.status.slice(1)}
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+                
+                // Update pagination
+                updatePagination(data.totalPages, page);
+                
+                // Load chart data
+                loadChartData();
+                
+            } catch (error) {
+                console.error('Error loading income history:', error);
+            }
+        }
+        
+        // Get income icon
+        function getIncomeIcon(type) {
+            const icons = {
+                'direct': 'user-plus',
+                'level': 'layer-group',
+                'matching': 'handshake',
+                'delivery': 'truck',
+                'royalty': 'crown',
+                'making': 'hammer',
+                'packing': 'box'
+            };
+            return icons[type] || 'rupee-sign';
+        }
+        
+        // Format income type
+        function formatIncomeType(type) {
+            return type.charAt(0).toUpperCase() + type.slice(1) + ' Income';
+        }
+        
+        // Load chart data
+        async function loadChartData() {
+            try {
+                const response = await fetch('/api/income-history/chart?days=30');
+                const data = await response.json();
+                
+                if (chart) {
+                    chart.destroy();
+                }
+                
+                const ctx = document.getElementById('incomeChart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Daily Income',
+                            data: data.values,
+                            borderColor: '#8B5CF6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#8B5CF6',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        return `₹${context.parsed.y.toLocaleString()}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₹' + value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading chart:', error);
+            }
+        }
+        
+        // Filter by type
+        function filterByType(type) {
+            currentFilter = type;
+            document.querySelectorAll('.income-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.textContent.toLowerCase().includes(type) || (type === 'all' && tab.textContent === 'All')) {
+                    tab.classList.add('active');
+                }
+            });
+            loadIncomeHistory(1, type, document.getElementById('statusFilter').value);
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            const type = document.getElementById('typeFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            loadIncomeHistory(1, type, status);
+        }
+        
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('typeFilter').value = 'all';
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('fromDate').value = '';
+            document.getElementById('toDate').value = '';
+            loadIncomeHistory(1, 'all', 'all');
+        }
+        
+        // Change page
+        function changePage(page) {
+            currentPage = page;
+            const type = document.getElementById('typeFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            loadIncomeHistory(page, type, status);
+        }
+        
+        // Update pagination
+        function updatePagination(totalPages, currentPage) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                btn.textContent = i;
+                btn.onclick = () => changePage(i);
+                pagination.appendChild(btn);
+            }
+        }
+        
+        // Export report
+        function exportReport() {
+            window.location.href = '/api/income-history/export';
+        }
+        
+        // Logout
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/';
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (await checkAuth()) {
+                loadIncomeHistory();
+                
+                // Set default dates
+                const today = new Date();
+                const thirtyDaysAgo = new Date(today.setDate(today.getDate() - 30));
+                document.getElementById('fromDate').valueAsDate = thirtyDaysAgo;
+                document.getElementById('toDate').valueAsDate = new Date();
+            }
+        });
+    </script>
+</body>
+</html>
