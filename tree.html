@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Binary Tree - LIRA</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tree-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.5s ease;
+        }
+        
+        .page-header h1 {
+            font-size: 42px;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .tree-controls {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .control-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+        
+        .control-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .zoom-level {
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .tree-view {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: var(--shadow-xl);
+            overflow: auto;
+            min-height: 600px;
+            position: relative;
+        }
+        
+        .tree-wrapper {
+            display: flex;
+            justify-content: center;
+            transition: transform 0.3s ease;
+            transform-origin: top center;
+        }
+        
+        .tree {
+            display: inline-block;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .tree ul {
+            padding-top: 20px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            padding-left: 0;
+        }
+        
+        .tree li {
+            float: left;
+            text-align: center;
+            list-style-type: none;
+            position: relative;
+            padding: 20px 10px 0 10px;
+        }
+        
+        .tree li::before,
+        .tree li::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 50%;
+            border-top: 2px solid var(--primary-light);
+            width: 50%;
+            height: 20px;
+        }
+        
+        .tree li::after {
+            right: auto;
+            left: 50%;
+            border-left: 2px solid var(--primary-light);
+        }
+        
+        .tree li:only-child::after,
+        .tree li:only-child::before {
+            display: none;
+        }
+        
+        .tree li:first-child::before,
+        .tree li:last-child::after {
+            border: 0 none;
+        }
+        
+        .tree li:last-child::before {
+            border-right: 2px solid var(--primary-light);
+            border-radius: 0 5px 0 0;
+        }
+        
+        .tree li:first-child::after {
+            border-radius: 5px 0 0 0;
+        }
+        
+        .tree-node {
+            display: inline-block;
+            padding: 15px;
+            border-radius: 15px;
+            text-decoration: none;
+            color: var(--dark);
+            position: relative;
+            transition: all 0.3s ease;
+            min-width: 180px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+        }
+        
+        .tree-node:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .tree-node.inactive {
+            background: linear-gradient(135deg, #868f96 0%, #596164 100%);
+            opacity: 0.8;
+        }
+        
+        .tree-node.franchise {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: 2px solid gold;
+        }
+        
+        .node-avatar {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            border: 2px solid white;
+        }
+        
+        .node-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .node-id {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .node-stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 5px;
+        }
+        
+        .node-stat {
+            text-align: center;
+        }
+        
+        .root-node {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            border: 3px solid gold;
+            transform: scale(1.1);
+        }
+        
+        .toolbar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: white;
+            border: none;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tool-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+        }
+        
+        .minimap {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            z-index: 10;
+            display: none;
+        }
+        
+        .minimap.show {
+            display: block;
+        }
+        
+        .minimap-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .node-details {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+        
+        .node-details.show {
+            display: block;
+        }
+        
+        .details-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .details-avatar {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+        }
+        
+        .details-info {
+            flex: 1;
+        }
+        
+        .details-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .details-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .details-stat {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .tree-node {
+                min-width: 120px;
+                padding: 10px;
+            }
+            
+            .node-avatar {
+                width: 35px;
+                height: 35px;
+                font-size: 14px;
+            }
+            
+            .node-name {
+                font-size: 11px;
+            }
+            
+            .tree-controls {
+                flex-wrap: wrap;
+            }
+            
+            .toolbar {
+                position: relative;
+                top: 0;
+                right: 0;
+                justify-content: center;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="logo">LIRA</a>
+            <div class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="nav-menu">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/team" class="nav-link">Team</a>
+                <a href="/tree" class="nav-link active">Tree</a>
+                <a href="/income-history" class="nav-link">Income</a>
+                <a href="/fund-request" class="nav-link">Add Fund</a>
+                <a href="/member-message" class="nav-link">
+                    <i class="fas fa-comment"></i>
+                    <span class="message-badge" id="unreadCount">0</span>
+                </a>
+                <div class="nav-link" onclick="logout()" style="cursor: pointer;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="tree-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Binary Tree View</h1>
+            <p>Visualize your network structure and team growth</p>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                <span>Active Member</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #868f96 0%, #596164 100%);"></div>
+                <span>Inactive Member</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: 2px solid gold;"></div>
+                <span>Franchise</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"></div>
+                <span>Current User</span>
+            </div>
+        </div>
+
+        <!-- Tree Controls -->
+        <div class="tree-controls">
+            <div class="control-group">
+                <button class="control-btn" onclick="zoomOut()">
+                    <i class="fas fa-search-minus"></i>
+                </button>
+                <span class="zoom-level" id="zoomLevel">100%</span>
+                <button class="control-btn" onclick="zoomIn()">
+                    <i class="fas fa-search-plus"></i>
+                </button>
+            </div>
+            
+            <div class="control-group">
+                <button class="control-btn" onclick="resetView()">
+                    <i class="fas fa-home"></i>
+                </button>
+                <button class="control-btn" onclick="expandAll()">
+                    <i class="fas fa-expand-alt"></i>
+                </button>
+                <button class="control-btn" onclick="collapseAll()">
+                    <i class="fas fa-compress-alt"></i>
+                </button>
+            </div>
+            
+            <div class="control-group">
+                <button class="control-btn" onclick="toggleMinimap()">
+                    <i class="fas fa-map"></i>
+                </button>
+                <button class="control-btn" onclick="downloadTree()">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="control-btn" onclick="refreshTree()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tree View -->
+        <div class="tree-view" id="treeView">
+            <div class="toolbar">
+                <button class="tool-btn" onclick="showRoot()" title="Go to Root">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+                <button class="tool-btn" onclick="showParent()" title="Show Parent">
+                    <i class="fas fa-level-up-alt"></i>
+                </button>
+                <button class="tool-btn" onclick="centerTree()" title="Center">
+                    <i class="fas fa-crosshairs"></i>
+                </button>
+            </div>
+            
+            <div class="minimap" id="minimap">
+                <canvas class="minimap-canvas" id="minimapCanvas"></canvas>
+            </div>
+            
+            <div class="tree-wrapper" id="treeWrapper">
+                <div class="tree" id="treeContainer">
+                    <!-- Tree will be loaded here -->
+                    <div class="loader"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Node Details -->
+        <div class="node-details" id="nodeDetails">
+            <div class="details-header">
+                <div class="details-avatar" id="detailAvatar">U</div>
+                <div class="details-info">
+                    <div class="details-name" id="detailName">User Name</div>
+                    <div class="details-id" id="detailId">ID: LIRA123456</div>
+                </div>
+                <button class="btn btn-outline" onclick="hideDetails()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="details-stats" id="detailsStats">
+                <!-- Stats will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentZoom = 1;
+        let currentRoot = null;
+        let treeData = null;
+        let minimapCtx = null;
+        
+        // Check authentication
+        async function checkAuth() {
+            const session = await fetch('/api/session').then(r => r.json());
+            if (!session.loggedIn) {
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+        
+        // Load tree data
+        async function loadTree(rootId = null) {
+            try {
+                const url = rootId ? `/api/tree/${rootId}` : '/api/tree';
+                const response = await fetch(url);
+                const data = await response.json();
+                treeData = data;
+                
+                renderTree(data);
+                updateMinimap();
+                
+            } catch (error) {
+                console.error('Error loading tree:', error);
+            }
+        }
+        
+        // Render tree
+        function renderTree(node) {
+            const container = document.getElementById('treeContainer');
+            
+            if (!node) {
+                container.innerHTML = '<p style="text-align: center;">No tree data available</p>';
+                return;
+            }
+            
+            function createNodeElement(node) {
+                const nodeClass = `tree-node ${node.status === 'active' ? '' : 'inactive'} ${node.franchiseStage !== 'general' ? 'franchise' : ''}`;
+                const rootClass = node.id === treeData?.id ? 'root-node' : '';
+                
+                return `
+                    <div class="${nodeClass} ${rootClass}" onclick="showNodeDetails('${node.id}')">
+                        <div class="node-avatar">${node.name.charAt(0)}</div>
+                        <div class="node-name">${node.name}</div>
+                        <div class="node-id">${node.id}</div>
+                        <div class="node-stats">
+                            <div class="node-stat">
+                                <i class="fas fa-user"></i> ${node.directCount || 0}
+                            </div>
+                            <div class="node-stat">
+                                <i class="fas fa-level-up-alt"></i> ${node.level || 1}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function buildTreeHTML(node) {
+                if (!node) return '';
+                
+                let html = `<li>${createNodeElement(node)}`;
+                
+                if (node.children && node.children.length > 0) {
+                    html += '<ul>';
+                    node.children.forEach(child => {
+                        html += buildTreeHTML(child);
+                    });
+                    html += '</ul>';
+                }
+                
+                html += '</li>';
+                return html;
+            }
+            
+            container.innerHTML = `<ul>${buildTreeHTML(node)}</ul>`;
+        }
+        
+        // Zoom functions
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom + 0.1, 2);
+            applyZoom();
+        }
+        
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom - 0.1, 0.5);
+            applyZoom();
+        }
+        
+        function applyZoom() {
+            document.getElementById('treeWrapper').style.transform = `scale(${currentZoom})`;
+            document.getElementById('zoomLevel').textContent = `${Math.round(currentZoom * 100)}%`;
+        }
+        
+        function resetView() {
+            currentZoom = 1;
+            applyZoom();
+            centerTree();
+        }
+        
+        function centerTree() {
+            const wrapper = document.getElementById('treeWrapper');
+            wrapper.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        }
+        
+        // Show node details
+        async function showNodeDetails(userId) {
+            try {
+                const response = await fetch(`/api/profile/${userId}`);
+                const user = await response.json();
+                
+                document.getElementById('detailAvatar').textContent = user.name.charAt(0);
+                document.getElementById('detailName').textContent = user.name;
+                document.getElementById('detailId').textContent = `ID: ${user.userId}`;
+                
+                const statsHtml = `
+                    <div class="details-stat">
+                        <div class="stat-label">Wallet Balance</div>
+                        <div class="stat-value">₹${(user.wallet || 0).toLocaleString()}</div>
+                    </div>
+                    <div class="details-stat">
+                        <div class="stat-label">Total Income</div>
+                        <div class="stat-value">₹${(user.totalIncome || 0).toLocaleString()}</div>
+                    </div>
+                    <div class="details-stat">
+                        <div class="stat-label">Direct Members</div>
+                        <div class="stat-value">${user.directCount || 0}</div>
+                    </div>
+                    <div class="details-stat">
+                        <div class="stat-label">Team Size</div>
+                        <div class="stat-value">${user.teamSize || 0}</div>
+                    </div>
+                    <div class="details-stat">
+                        <div class="stat-label">Join Date</div>
+                        <div class="stat-value">${new Date(user.joinDate).toLocaleDateString()}</div>
+                    </div>
+                    <div class="details-stat">
+                        <div class="stat-label">Status</div>
+                        <div class="stat-value status-${user.status}">${user.status}</div>
+                    </div>
+                `;
+                
+                document.getElementById('detailsStats').innerHTML = statsHtml;
+                document.getElementById('nodeDetails').classList.add('show');
+                
+            } catch (error) {
+                console.error('Error loading user details:', error);
+            }
+        }
+        
+        function hideDetails() {
+            document.getElementById('nodeDetails').classList.remove('show');
+        }
+        
+        // Show root
+        function showRoot() {
+            loadTree();
+        }
+        
+        // Show parent
+        async function showParent() {
+            if (!treeData?.id) return;
+            
+            try {
+                const response = await fetch(`/api/user/${treeData.id}/parent`);
+                const data = await response.json();
+                if (data.parentId) {
+                    loadTree(data.parentId);
+                }
+            } catch (error) {
+                console.error('Error loading parent:', error);
+            }
+        }
+        
+        // Toggle minimap
+        function toggleMinimap() {
+            document.getElementById('minimap').classList.toggle('show');
+            if (document.getElementById('minimap').classList.contains('show')) {
+                updateMinimap();
+            }
+        }
+        
+        // Update minimap
+        function updateMinimap() {
+            const canvas = document.getElementById('minimapCanvas');
+            if (!canvas) return;
+            
+            minimapCtx = canvas.getContext('2d');
+            const treeElement = document.getElementById('treeContainer');
+            
+            // Draw simplified tree on minimap
+            minimapCtx.fillStyle = '#f0f0f0';
+            minimapCtx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // This is a simplified version - in production, you'd draw actual tree structure
+            minimapCtx.fillStyle = '#8B5CF6';
+            minimapCtx.beginPath();
+            minimapCtx.arc(100, 75, 5, 0, 2 * Math.PI);
+            minimapCtx.fill();
+        }
+        
+        // Expand/Collapse
+        function expandAll() {
+            // In a real implementation, you'd expand all nodes
+            // For now, just refresh
+            loadTree(currentRoot);
+        }
+        
+        function collapseAll() {
+            // Collapse to root only
+            if (treeData) {
+                const rootOnly = {
+                    ...treeData,
+                    children: []
+                };
+                renderTree(rootOnly);
+            }
+        }
+        
+        // Download tree as image
+        function downloadTree() {
+            const treeElement = document.getElementById('treeContainer');
+            html2canvas(treeElement).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'binary-tree.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+        
+        // Refresh tree
+        function refreshTree() {
+            loadTree(currentRoot);
+        }
+        
+        // Logout
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/';
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (await checkAuth()) {
+                loadTree();
+                
+                // Get root from URL if provided
+                const urlParams = new URLSearchParams(window.location.search);
+                const rootId = urlParams.get('root');
+                if (rootId) {
+                    currentRoot = rootId;
+                    loadTree(rootId);
+                }
+            }
+        });
+        
+        // Add html2canvas for tree download
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>
