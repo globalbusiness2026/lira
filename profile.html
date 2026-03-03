@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>My Profile - LIRA</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .profile-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .profile-header {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: var(--gradient-1);
+        }
+        
+        .profile-avatar {
+            position: relative;
+            z-index: 2;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+        }
+        
+        .avatar-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: var(--shadow);
+            object-fit: cover;
+            background: var(--gradient-1);
+        }
+        
+        .avatar-upload {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 35px;
+            height: 35px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            border: 2px solid white;
+            transition: all 0.3s ease;
+        }
+        
+        .avatar-upload:hover {
+            transform: scale(1.1);
+            background: var(--primary-dark);
+        }
+        
+        .profile-name {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .profile-badge {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 20px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge.general { background: #e0e0e0; color: var(--dark); }
+        .badge.micro { background: #c7d2fe; color: var(--primary-dark); }
+        .badge.mini { background: #fed7aa; color: var(--warning); }
+        .badge.max { background: #fecaca; color: var(--danger); }
+        
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray);
+        }
+        
+        .profile-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 12px 25px;
+            background: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            color: var(--dark);
+        }
+        
+        .tab-btn.active {
+            background: var(--gradient-1);
+            color: white;
+        }
+        
+        .tab-content {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .profile-form {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .document-upload {
+            border: 2px dashed var(--primary);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .document-upload:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+        
+        .document-upload i {
+            font-size: 48px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .document-preview {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .preview-item {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .preview-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 25px;
+            height: 25px;
+            background: var(--danger);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .verification-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 15px;
+            background: #e8f5e9;
+            color: var(--success);
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .verification-badge i {
+            font-size: 14px;
+        }
+        
+        .icard-preview {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .icard-preview:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .icard-preview::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255,255,255,0.1);
+            transform: rotate(45deg);
+        }
+        
+        @media (max-width: 768px) {
+            .profile-header {
+                padding: 30px 20px;
+            }
+            
+            .profile-name {
+                font-size: 24px;
+            }
+            
+            .profile-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .tab-content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="logo">LIRA</a>
+            <div class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="nav-menu">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/products" class="nav-link">Shop</a>
+                <a href="/team" class="nav-link">Team</a>
+                <a href="/income-history" class="nav-link">Income</a>
+                <a href="/profile" class="nav-link active">Profile</a>
+                <a href="/member-message" class="nav-link">
+                    <i class="fas fa-comment"></i>
+                    <span class="message-badge" id="unreadCount">0</span>
+                </a>
+                <div class="nav-link" onclick="logout()" style="cursor: pointer;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="profile-container">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <img src="https://via.placeholder.com/120" alt="Profile" class="avatar-image" id="profileImage">
+                <div class="avatar-upload" onclick="document.getElementById('profilePicInput').click()">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <input type="file" id="profilePicInput" accept="image/*" style="display: none;" onchange="uploadProfilePic(this)">
+            </div>
+            
+            <h1 class="profile-name" id="displayName">Loading...</h1>
+            <div class="profile-badge">
+                <span class="badge" id="franchiseBadge">General Member</span>
+            </div>
+            
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="statWallet">₹0</div>
+                    <div class="stat-label">Wallet Balance</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="statIncome">₹0</div>
+                    <div class="stat-label">Total Income</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="statTeam">0</div>
+                    <div class="stat-label">Team Size</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="statLevel">1</div>
+                    <div class="stat-label">Current Level</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Tabs -->
+        <div class="profile-tabs">
+            <button class="tab-btn active" onclick="switchTab('personal')">Personal Info</button>
+            <button class="tab-btn" onclick="switchTab('bank')">Bank Details</button>
+            <button class="tab-btn" onclick="switchTab('documents')">Documents</button>
+            <button class="tab-btn" onclick="switchTab('icard')">I-Card</button>
+        </div>
+
+        <!-- Personal Info Tab -->
+        <div id="personalTab" class="tab-content">
+            <h2 style="margin-bottom: 30px;">Personal Information</h2>
+            
+            <form class="profile-form" id="personalForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="fullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">User ID</label>
+                        <input type="text" class="form-control" id="userId" readonly>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Mobile Number</label>
+                        <input type="tel" class="form-control" id="mobile" readonly>
+                        <small style="color: var(--success);"><i class="fas fa-check-circle"></i> Verified</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" readonly>
+                        <small style="color: var(--success);"><i class="fas fa-check-circle"></i> Verified</small>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" id="dob">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Anniversary Date</label>
+                        <input type="date" class="form-control" id="anniversary">
+                    </div>
+                </div>
+                
+                <h3 style="margin: 30px 0 20px;">Address Details</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Street Address</label>
+                        <input type="text" class="form-control" id="street">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">City</label>
+                        <input type="text" class="form-control" id="city">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">State</label>
+                        <input type="text" class="form-control" id="state">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pincode</label>
+                        <input type="text" class="form-control" id="pincode">
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
+                    <button type="button" class="btn btn-outline" onclick="resetForm()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" onclick="savePersonalInfo(event)">Save Changes</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bank Details Tab -->
+        <div id="bankTab" class="tab-content" style="display: none;">
+            <h2 style="margin-bottom: 30px;">Bank Account Details</h2>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 15px; margin-bottom: 30px;">
+                <p><i class="fas fa-info-circle" style="color: var(--info);"></i> Your bank details are encrypted and secure. Withdrawals will be processed to this account.</p>
+            </div>
+            
+            <form class="profile-form" id="bankForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Account Holder Name</label>
+                        <input type="text" class="form-control" id="accountName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Account Number</label>
+                        <input type="text" class="form-control" id="accountNumber" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Bank Name</label>
+                        <input type="text" class="form-control" id="bankName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">IFSC Code</label>
+                        <input type="text" class="form-control" id="ifsc" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Branch Name</label>
+                        <input type="text" class="form-control" id="branch">
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <label class="form-label">Verification Status</label>
+                    <div>
+                        <span class="verification-badge" id="bankVerification">
+                            <i class="fas fa-clock"></i> Not Verified
+                        </span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
+                    <button type="button" class="btn btn-outline" onclick="switchTab('personal')">Back</button>
+                    <button type="submit" class="btn btn-primary" onclick="saveBankDetails(event)">Save Bank Details</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Documents Tab -->
+        <div id="documentsTab" class="tab-content" style="display: none;">
+            <h2 style="margin-bottom: 30px;">Document Verification</h2>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 15px; margin-bottom: 30px;">
+                <p><i class="fas fa-shield-alt" style="color: var(--info);"></i> Upload clear images of your documents. All documents are encrypted and secure.</p>
+            </div>
+            
+            <div class="profile-form">
+                <!-- Aadhar Front -->
+                <div style="margin-bottom: 40px;">
+                    <h3 style="margin-bottom: 20px;">Aadhar Card (Front)</h3>
+                    <div class="document-upload" onclick="document.getElementById('aadharFrontInput').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload Aadhar Front</p>
+                        <small>Supported: JPG, PNG, PDF (Max 5MB)</small>
+                    </div>
+                    <input type="file" id="aadharFrontInput" accept="image/*" style="display: none;" onchange="previewDocument(this, 'aadharFront')">
+                    <div id="aadharFrontPreview" class="document-preview"></div>
+                </div>
+                
+                <!-- Aadhar Back -->
+                <div style="margin-bottom: 40px;">
+                    <h3 style="margin-bottom: 20px;">Aadhar Card (Back)</h3>
+                    <div class="document-upload" onclick="document.getElementById('aadharBackInput').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload Aadhar Back</p>
+                        <small>Supported: JPG, PNG, PDF (Max 5MB)</small>
+                    </div>
+                    <input type="file" id="aadharBackInput" accept="image/*" style="display: none;" onchange="previewDocument(this, 'aadharBack')">
+                    <div id="aadharBackPreview" class="document-preview"></div>
+                </div>
+                
+                <!-- Pan Card -->
+                <div style="margin-bottom: 40px;">
+                    <h3 style="margin-bottom: 20px;">PAN Card</h3>
+                    <div class="document-upload" onclick="document.getElementById('panInput').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload PAN Card</p>
+                        <small>Supported: JPG, PNG, PDF (Max 5MB)</small>
+                    </div>
+                    <input type="file" id="panInput" accept="image/*" style="display: none;" onchange="previewDocument(this, 'pan')">
+                    <div id="panPreview" class="document-preview"></div>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
+                    <button type="button" class="btn btn-outline" onclick="switchTab('personal')">Back</button>
+                    <button class="btn btn-primary" onclick="uploadDocuments()">Upload Documents</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- I-Card Tab -->
+        <div id="icardTab" class="tab-content" style="display: none; text-align: center;">
+            <h2 style="margin-bottom: 30px;">Your Digital Identity Card</h2>
+            
+            <div class="icard-preview" onclick="downloadICard()">
+                <div style="position: relative; z-index: 2;">
+                    <h3 style="font-size: 24px; margin-bottom: 20px;">LIRA</h3>
+                    <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 32px;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h4 id="icardName" style="margin-bottom: 10px;">Loading...</h4>
+                    <p id="icardId" style="margin-bottom: 5px; opacity: 0.9;">ID: Loading...</p>
+                    <p id="icardDesignation" style="margin-bottom: 20px; opacity: 0.9;">General Member</p>
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px;">
+                        <p><i class="fas fa-phone"></i> <span id="icardMobile">Loading...</span></p>
+                        <p><i class="fas fa-envelope"></i> <span id="icardEmail">Loading...</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" style="margin-top: 30px;" onclick="downloadICard()">
+                <i class="fas fa-download"></i> Download I-Card
+            </button>
+            
+            <div style="margin-top: 20px;">
+                <small style="color: var(--gray);">This is an official LIRA identification card</small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userData = null;
+        
+        // Check authentication
+        async function checkAuth() {
+            const session = await fetch('/api/session').then(r => r.json());
+            if (!session.loggedIn) {
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+        
+        // Load profile data
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/profile');
+                const data = await response.json();
+                userData = data;
+                
+                // Update header
+                document.getElementById('displayName').textContent = data.name;
+                document.getElementById('statWallet').textContent = `₹${data.wallet.toLocaleString()}`;
+                document.getElementById('statIncome').textContent = `₹${data.totalIncome.toLocaleString()}`;
+                document.getElementById('statTeam').textContent = data.directCount || 0;
+                document.getElementById('statLevel').textContent = data.level || 1;
+                
+                // Update badge
+                const badge = document.getElementById('franchiseBadge');
+                badge.className = `badge ${data.franchiseStage}`;
+                badge.textContent = data.franchiseStage === 'general' ? 'General Member' : 
+                                   data.franchiseStage === 'micro' ? 'Micro Franchise' :
+                                   data.franchiseStage === 'mini' ? 'Mini Franchise' : 'Max Franchise';
+                
+                // Personal info
+                document.getElementById('fullName').value = data.name || '';
+                document.getElementById('userId').value = data.userId || '';
+                document.getElementById('mobile').value = data.mobile || '';
+                document.getElementById('email').value = data.email || '';
+                
+                if (data.dob) {
+                    document.getElementById('dob').value = new Date(data.dob).toISOString().split('T')[0];
+                }
+                if (data.anniversary) {
+                    document.getElementById('anniversary').value = new Date(data.anniversary).toISOString().split('T')[0];
+                }
+                
+                // Address
+                if (data.address) {
+                    document.getElementById('street').value = data.address.street || '';
+                    document.getElementById('city').value = data.address.city || '';
+                    document.getElementById('state').value = data.address.state || '';
+                    document.getElementById('pincode').value = data.address.pincode || '';
+                }
+                
+                // Bank details
+                if (data.bankDetails) {
+                    document.getElementById('accountName').value = data.bankDetails.accountName || '';
+                    document.getElementById('accountNumber').value = data.bankDetails.accountNumber || '';
+                    document.getElementById('bankName').value = data.bankDetails.bankName || '';
+                    document.getElementById('ifsc').value = data.bankDetails.ifsc || '';
+                    document.getElementById('branch').value = data.bankDetails.branch || '';
+                }
+                
+                // Profile picture
+                if (data.profilePic) {
+                    document.getElementById('profileImage').src = `/uploads/profile/${data.profilePic}`;
+                }
+                
+                // Update I-Card preview
+                document.getElementById('icardName').textContent = data.name;
+                document.getElementById('icardId').textContent = `ID: ${data.userId}`;
+                document.getElementById('icardDesignation').textContent = 
+                    data.franchiseStage === 'general' ? 'General Member' : 
+                    data.franchiseStage === 'micro' ? 'Micro Franchise' :
+                    data.franchiseStage === 'mini' ? 'Mini Franchise' : 'Max Franchise';
+                document.getElementById('icardMobile').textContent = data.mobile;
+                document.getElementById('icardEmail').textContent = data.email;
+                
+                // Load documents
+                if (data.documents) {
+                    if (data.documents.aadharFront) {
+                        addPreview('aadharFront', data.documents.aadharFront);
+                    }
+                    if (data.documents.aadharBack) {
+                        addPreview('aadharBack', data.documents.aadharBack);
+                    }
+                    if (data.documents.panCard) {
+                        addPreview('pan', data.documents.panCard);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+        
+        // Switch tabs
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            
+            if (tab === 'personal') {
+                document.getElementById('personalTab').style.display = 'block';
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            } else if (tab === 'bank') {
+                document.getElementById('bankTab').style.display = 'block';
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            } else if (tab === 'documents') {
+                document.getElementById('documentsTab').style.display = 'block';
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+            } else if (tab === 'icard') {
+                document.getElementById('icardTab').style.display = 'block';
+                document.querySelectorAll('.tab-btn')[3].classList.add('active');
+            }
+        }
+        
+        // Save personal info
+        async function savePersonalInfo(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('fullName').value,
+                dob: document.getElementById('dob').value,
+                anniversary: document.getElementById('anniversary').value,
+                address: JSON.stringify({
+                    street: document.getElementById('street').value,
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    pincode: document.getElementById('pincode').value
+                })
+            };
+            
+            try {
+                const response = await fetch('/api/profile/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('Profile updated successfully');
+                    loadProfile();
+                }
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                alert('Failed to save changes');
+            }
+        }
+        
+        // Save bank details
+        async function saveBankDetails(e) {
+            e.preventDefault();
+            
+            const formData = {
+                bankDetails: JSON.stringify({
+                    accountName: document.getElementById('accountName').value,
+                    accountNumber: document.getElementById('accountNumber').value,
+                    bankName: document.getElementById('bankName').value,
+                    ifsc: document.getElementById('ifsc').value,
+                    branch: document.getElementById('branch').value
+                })
+            };
+            
+            try {
+                const response = await fetch('/api/profile/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('Bank details saved successfully');
+                    document.getElementById('bankVerification').innerHTML = '<i class="fas fa-check-circle"></i> Verified';
+                }
+            } catch (error) {
+                console.error('Error saving bank details:', error);
+                alert('Failed to save bank details');
+            }
+        }
+        
+        // Upload profile picture
+        async function uploadProfilePic(input) {
+            if (!input.files || !input.files[0]) return;
+            
+            const formData = new FormData();
+            formData.append('profilePic', input.files[0]);
+            
+            try {
+                const response = await fetch('/api/profile/update', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('profileImage').src = e.target.result;
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                    alert('Profile picture updated');
+                }
+            } catch (error) {
+                console.error('Error uploading profile pic:', error);
+                alert('Failed to upload picture');
+            }
+        }
+        
+        // Preview document
+        function previewDocument(input, type) {
+            if (!input.files || !input.files[0]) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                addPreview(type, e.target.result, true);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+        
+        function addPreview(type, src, isTemp = false) {
+            const previewDiv = document.getElementById(`${type}Preview`);
+            previewDiv.innerHTML = `
+                <div class="preview-item">
+                    <img src="${src}" alt="${type}">
+                    <div class="preview-remove" onclick="removeDocument('${type}')">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function removeDocument(type) {
+            document.getElementById(`${type}Preview`).innerHTML = '';
+        }
+        
+        // Upload documents
+        async function uploadDocuments() {
+            const formData = new FormData();
+            
+            const aadharFront = document.getElementById('aadharFrontInput').files[0];
+            const aadharBack = document.getElementById('aadharBackInput').files[0];
+            const pan = document.getElementById('panInput').files[0];
+            
+            if (aadharFront) formData.append('aadharFront', aadharFront);
+            if (aadharBack) formData.append('aadharBack', aadharBack);
+            if (pan) formData.append('panCard', pan);
+            
+            try {
+                const response = await fetch('/api/profile/update', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('Documents uploaded successfully');
+                }
+            } catch (error) {
+                console.error('Error uploading documents:', error);
+                alert('Failed to upload documents');
+            }
+        }
+        
+        // Download I-Card
+        async function downloadICard() {
+            try {
+                window.location.href = '/api/icard/download';
+            } catch (error) {
+                console.error('Error downloading I-Card:', error);
+                alert('Failed to download I-Card');
+            }
+        }
+        
+        // Logout
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/';
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (await checkAuth()) {
+                loadProfile();
+            }
+        });
+    </script>
+</body>
+</html>
