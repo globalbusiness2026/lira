@@ -3825,6 +3825,10 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin-login.html'));
 });
 
+app.get('/admin-login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-login.html'));
+});
+
 app.get('/dashboard', (req, res) => {
     if (!req.session.userId) {
         return res.redirect('/login');
@@ -3837,6 +3841,162 @@ app.get('/admin-dashboard', (req, res) => {
         return res.redirect('/admin');
     }
     res.sendFile(path.join(__dirname, 'admin-dashboard.html'));
+});
+
+app.get('/withdrawal', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'withdrawal.html'));
+});
+
+app.get('/team', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'team.html'));
+});
+
+app.get('/tree', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'tree.html'));
+});
+
+app.get('/profile', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'profile.html'));
+});
+
+app.get('/fund-request', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'fund-request.html'));
+});
+
+app.get('/income-history', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'income-history.html'));
+});
+
+app.get('/franchise', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'franchise.html'));
+});
+
+app.get('/franchise-purchase', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'franchise-purchase.html'));
+});
+
+app.get('/kart', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'kart.html'));
+});
+
+app.get('/my-order', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'my-order.html'));
+});
+
+app.get('/member-message', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'member-message.html'));
+});
+
+app.get('/forgot-id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'forgot-id.html'));
+});
+
+app.get('/forgot-password', (req, res) => {
+    res.sendFile(path.join(__dirname, 'forgot-password.html'));
+});
+
+// Admin routes
+app.get('/all-member', (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect('/admin');
+    }
+    res.sendFile(path.join(__dirname, 'all-member.html'));
+});
+
+app.get('/add-product', (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect('/admin');
+    }
+    res.sendFile(path.join(__dirname, 'add-product.html'));
+});
+
+app.get('/income-settings', (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect('/admin');
+    }
+    res.sendFile(path.join(__dirname, 'income-settings.html'));
+});
+
+app.get('/admin-income-report', (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect('/admin');
+    }
+    res.sendFile(path.join(__dirname, 'admin-income-report.html'));
+});
+
+app.get('/payout', (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect('/admin');
+    }
+    res.sendFile(path.join(__dirname, 'payout.html'));
+});
+
+app.get('/admin-franchise', (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect('/admin');
+    }
+    res.sendFile(path.join(__dirname, 'admin-franchise.html'));
+});
+
+app.get('/franchise-activity', (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect('/admin');
+    }
+    res.sendFile(path.join(__dirname, 'franchise-activity.html'));
+});
+
+app.get('/delivery', (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect('/admin');
+    }
+    res.sendFile(path.join(__dirname, 'delivery.html'));
+});
+
+app.get('/admin-message', (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect('/admin');
+    }
+    res.sendFile(path.join(__dirname, 'admin-message.html'));
+});
+
+app.get('/payout-settings', (req, res) => {
+    if (req.session.role !== 'admin') {
+        return res.redirect('/admin');
+    }
+    res.sendFile(path.join(__dirname, 'payout-setting.html'));
 });
 
 // Catch all other routes to serve HTML files
