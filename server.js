@@ -369,22 +369,66 @@ const Reward = mongoose.model('Reward', rewardSchema);
 const Award = mongoose.model('Award', awardSchema);
 const Delivery = mongoose.model('Delivery', deliverySchema);
 
-// ==================== EMAIL CONFIG (Maileroo - FREE 3000/month) ====================
-const transporter = nodemailer.createTransport({
-    host: 'smtp.maileroo.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: 'apikey', // ⚠️ IMPORTANT: YEH EXACT 'apikey' LIKHNA HAI
-        pass: process.env.MAILEROO_API_KEY
-    },
-    tls: {
-        rejectUnauthorized: false
-    },
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000
-});
+// ==================== EMAIL CONFIG (Maileroo HTTP API - Render Friendly) ====================
+
+// ✅ HTTP API version for Maileroo (SMTP se better hai, Render pe block nahi hoga)
+async function sendEmail(to, subject, html) {
+    try {
+        console.log(`📧 Attempting to send email to: ${to}`);
+
+        // API request body bana rahe hain
+        const requestBody = {
+            from: {
+                address: 'gbusiness051@gmail.com', // Teri company email
+                display_name: 'LIRA MLM'
+            },
+            to: [
+                {
+                    address: to
+                }
+            ],
+            subject: subject,
+            html: html,
+            tracking: true
+        };
+
+        console.log('📧 Request body:', JSON.stringify(requestBody, null, 2));
+
+        // API call
+        const response = await fetch('https://smtp.maileroo.com/api/v2/emails', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Api-Key': process.env.MAILEROO_API_KEY // Render ka variable
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        const responseText = await response.text();
+        console.log('📧 Raw response:', responseText);
+
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error('❌ Failed to parse response:', responseText);
+            return false;
+        }
+
+        console.log('📧 Parsed response:', data);
+
+        if (response.ok && data.success) {
+            console.log('✅ Email sent successfully!');
+            return true;
+        } else {
+            console.error('❌ Maileroo error:', data.message || 'Unknown error');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Email error:', error);
+        return false;
+    }
+}
 
 // ==================== MULTER CONFIG ====================
 const storage = multer.diskStorage({
@@ -463,26 +507,6 @@ function generateOrderId() {
 
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-async function sendEmail(to, subject, html) {
-    try {
-        console.log(`📧 Attempting to send email to: ${to}`);
-        
-        const mailOptions = {
-            from: `"LIRA MLM" <gbusiness051@gmail.com>`, // Sender email (verified in Maileroo)
-            to,
-            subject,
-            html
-        };
-        
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`✅ Email sent: ${info.messageId}`);
-        return true;
-    } catch (error) {
-        console.error('❌ Email error:', error);
-        return false;
-    }
 }
 
 // Binary Tree Placement Function
