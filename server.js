@@ -21,7 +21,10 @@ const server = http.createServer(app);
 const io = socketIO(server);
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, './')));
@@ -40,17 +43,27 @@ if (!fs.existsSync('uploads')) {
 
 // Session Configuration
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || 'lira_secret_key',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
-    cookie: { maxAge: 1000 * 60 * 60 * 24 } // 1 day
+    store: MongoStore.create({ 
+        mongoUrl: process.env.MONGODB_URI,
+        touchAfter: 24 * 3600
+    }),
+    cookie: { 
+        maxAge: 1000 * 60 * 60 * 24,
+        secure: false,
+        httpOnly: true
+    }
 }));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ MongoDB Connected Successfully'))
-    .catch(err => console.error('❌ MongoDB Error:', err));
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => console.log('✅ MongoDB Connected Successfully'))
+.catch(err => console.error('❌ MongoDB Error:', err));
 
 // ==================== MODELS ====================
 
@@ -362,7 +375,13 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS.replace(/ /g, '')
-    }
+    },
+    tls: {
+        rejectUnauthorized: false
+    },
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000
 });
 
 // ==================== MULTER CONFIG ====================
@@ -446,12 +465,17 @@ function generateOTP() {
 
 async function sendEmail(to, subject, html) {
     try {
-        await transporter.sendMail({
+        console.log(`📧 Attempting to send email to: ${to}`);
+        
+        const mailOptions = {
             from: `"LIRA MLM" <${process.env.EMAIL_USER}>`,
             to,
             subject,
             html
-        });
+        };
+        
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`✅ Email sent: ${info.messageId}`);
         return true;
     } catch (error) {
         console.error('❌ Email error:', error);
@@ -785,16 +809,39 @@ function generateBirthdayEmail(name) {
 
 // ==================== USER ROUTES ====================
 
-// ✅ SEND OTP ROUTE (FIXED)
+// ✅ TEST EMAIL ROUTE
+app.get('/api/test-email', async (req, res) => {
+    try {
+        console.log('📧 Test email route called');
+        
+        const testEmail = 'nikhilsp369@gmail.com';
+        const testHTML = '<h1>Test Email from LIRA</h1><p>Ye ek test email hai.</p>';
+        
+        const sent = await sendEmail(testEmail, 'Test Email - LIRA', testHTML);
+        
+        if (sent) {
+            res.json({ success: true, message: 'Test email sent!' });
+        } else {
+            res.status(500).json({ success: false, error: 'Email failed' });
+        }
+    } catch (error) {
+        console.error('Test email error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ✅ SEND OTP ROUTE
 app.post('/api/send-otp', async (req, res) => {
     try {
         const { email } = req.body;
+        console.log('📧 Send OTP request for:', email);
 
         if (!email) {
             return res.status(400).json({ success: false, error: 'Email is required' });
         }
 
         const otp = generateOTP();
+        console.log('📧 Generated OTP:', otp);
 
         req.session.otp = otp;
         req.session.otpEmail = email;
@@ -817,20 +864,23 @@ app.post('/api/send-otp', async (req, res) => {
         );
 
         if (emailSent) {
+            console.log('✅ OTP sent successfully to:', email);
             res.json({ success: true, message: 'OTP sent successfully' });
         } else {
+            console.error('❌ Failed to send OTP');
             res.status(500).json({ success: false, error: 'Failed to send OTP' });
         }
     } catch (error) {
-        console.error('Send OTP error:', error);
+        console.error('❌ Send OTP error:', error);
         res.status(500).json({ success: false, error: 'Failed to send OTP' });
     }
 });
 
-// ✅ VERIFY OTP ROUTE (FIXED)
+// ✅ VERIFY OTP ROUTE
 app.post('/api/verify-otp', (req, res) => {
     try {
         const { email, otp } = req.body;
+        console.log('🔍 Verify OTP request for:', email);
 
         if (!email || !otp) {
             return res.status(400).json({ success: false, error: 'Email and OTP are required' });
@@ -852,9 +902,10 @@ app.post('/api/verify-otp', (req, res) => {
         delete req.session.otpEmail;
         delete req.session.otpExpiry;
 
+        console.log('✅ OTP verified successfully for:', email);
         res.json({ success: true, message: 'OTP verified successfully' });
     } catch (error) {
-        console.error('Verify OTP error:', error);
+        console.error('❌ Verify OTP error:', error);
         res.status(500).json({ success: false, error: 'Failed to verify OTP' });
     }
 });
