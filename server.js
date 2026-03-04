@@ -369,7 +369,7 @@ const Reward = mongoose.model('Reward', rewardSchema);
 const Award = mongoose.model('Award', awardSchema);
 const Delivery = mongoose.model('Delivery', deliverySchema);
 
-// ==================== EMAIL CONFIG (BREVO HTTP API - RENDER FRIENDLY) ====================
+// ==================== EMAIL CONFIG (BREVO HTTP API) ====================
 async function sendEmail(to, subject, html) {
     try {
         console.log(`📧 Sending email to: ${to}`);
@@ -490,11 +490,59 @@ function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Binary Tree Placement Function
+// ==================== UPDATED: Binary Tree Placement Function with AUTO POSITION ====================
 async function findPosition(sponsorId, position) {
     const sponsor = await User.findOne({ userId: sponsorId });
     if (!sponsor) return null;
     
+    // AUTO POSITION LOGIC - Top to Bottom, Left to Right
+    if (position === 'auto') {
+        console.log('🔍 Auto position detection for sponsor:', sponsorId);
+        
+        // Check if left is available at sponsor level
+        if (!sponsor.leftChild) {
+            console.log('✅ Auto: Left position available at sponsor');
+            return { parentId: sponsorId, position: 'left' };
+        }
+        
+        // Check if right is available at sponsor level
+        if (!sponsor.rightChild) {
+            console.log('✅ Auto: Right position available at sponsor');
+            return { parentId: sponsorId, position: 'right' };
+        }
+        
+        // Both occupied - do BFS to find next available position
+        console.log('🔄 Auto: Both positions at sponsor occupied, searching deeper...');
+        const queue = [sponsorId];
+        
+        while (queue.length > 0) {
+            const currentId = queue.shift();
+            const current = await User.findOne({ userId: currentId });
+            
+            if (!current) continue;
+            
+            // Check left child
+            if (!current.leftChild) {
+                console.log(`✅ Auto: Found available left position under ${currentId}`);
+                return { parentId: current.userId, position: 'left' };
+            } else {
+                queue.push(current.leftChild);
+            }
+            
+            // Check right child
+            if (!current.rightChild) {
+                console.log(`✅ Auto: Found available right position under ${currentId}`);
+                return { parentId: current.userId, position: 'right' };
+            } else {
+                queue.push(current.rightChild);
+            }
+        }
+        
+        console.log('❌ Auto: No position found in entire tree');
+        return null;
+    }
+    
+    // Manual left/right selection (backward compatibility)
     if (position === 'left' && !sponsor.leftChild) {
         return { parentId: sponsorId, position: 'left' };
     }
@@ -502,6 +550,7 @@ async function findPosition(sponsorId, position) {
         return { parentId: sponsorId, position: 'right' };
     }
     
+    // For manual selection, search deeper if direct position is taken
     const queue = [sponsorId];
     while (queue.length > 0) {
         const currentId = queue.shift();
@@ -917,7 +966,7 @@ app.post('/api/verify-otp', (req, res) => {
     }
 });
 
-// Register
+// ✅ REGISTER ROUTE (with auto position)
 app.post('/api/register', async (req, res) => {
     try {
         const { sponsorId, name, mobile, email, position } = req.body;
@@ -936,9 +985,10 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ error: 'Invalid Sponsor ID' });
         }
         
+        // Find position - now handles 'auto' correctly
         const positionData = await findPosition(sponsorId, position);
         if (!positionData) {
-            return res.status(400).json({ error: 'No position available in the selected leg' });
+            return res.status(400).json({ error: 'No position available in the tree' });
         }
         
         const userId = generateUserId();
@@ -956,6 +1006,7 @@ app.post('/api/register', async (req, res) => {
             expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         });
         
+        // Update parent's child
         if (positionData.position === 'left') {
             await User.findOneAndUpdate(
                 { userId: positionData.parentId },
@@ -968,9 +1019,12 @@ app.post('/api/register', async (req, res) => {
             );
         }
         
+        // Update sponsor's direct count
         sponsor.directCount += 1;
         await sponsor.save();
         await updateUserLevel(sponsorId);
+        
+        // Send welcome email
         await sendEmail(email, 'Welcome to LIRA Family!', generateWelcomeEmail(name, userId, mobile));
         
         res.json({ 
