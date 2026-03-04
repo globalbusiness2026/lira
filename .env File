@@ -3,5 +3,6 @@ PORT=5000
 JWT_SECRET=lira_super_secret_key_2026
 EMAIL_USER=gbusiness051@gmail.com
 EMAIL_PASS=wkfk tjck ndnp peoi
+BREVO_API_KEY=xsmtpsib-a9172e8e84ee28ca68b181f46e50a931976ee4c8e67fa0f57a88306d317289e6-22GQargiNeU6vwLF
 SESSION_SECRET=lira_session_secret_2026
 BASE_URL=http://localhost:5000
