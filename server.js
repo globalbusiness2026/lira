@@ -166,13 +166,13 @@ const productSchema = new mongoose.Schema({
 });
 
 const categorySchema = new mongoose.Schema({
-    name: { type: String, unique: true },
-    purchaseRate: Number,
-    expense: Number,
-    making: Number,
-    packing: Number,
-    deliveryCharge: Number,
-    gst: Number,
+    name: { type: String, unique: true, required: true },
+    purchaseRate: { type: Number, required: true },
+    expense: { type: Number, required: true },
+    making: { type: Number, required: true },
+    packing: { type: Number, required: true },
+    deliveryCharge: { type: Number, required: true },
+    gst: { type: Number, required: true },
     status: { type: String, default: 'active' },
     createdAt: { type: Date, default: Date.now }
 });
@@ -490,59 +490,37 @@ function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ==================== UPDATED: Binary Tree Placement Function with AUTO POSITION ====================
+// Binary Tree Placement Function
 async function findPosition(sponsorId, position) {
     const sponsor = await User.findOne({ userId: sponsorId });
     if (!sponsor) return null;
     
-    // AUTO POSITION LOGIC - Top to Bottom, Left to Right
     if (position === 'auto') {
-        console.log('🔍 Auto position detection for sponsor:', sponsorId);
-        
-        // Check if left is available at sponsor level
         if (!sponsor.leftChild) {
-            console.log('✅ Auto: Left position available at sponsor');
             return { parentId: sponsorId, position: 'left' };
         }
-        
-        // Check if right is available at sponsor level
         if (!sponsor.rightChild) {
-            console.log('✅ Auto: Right position available at sponsor');
             return { parentId: sponsorId, position: 'right' };
         }
         
-        // Both occupied - do BFS to find next available position
-        console.log('🔄 Auto: Both positions at sponsor occupied, searching deeper...');
         const queue = [sponsorId];
-        
         while (queue.length > 0) {
             const currentId = queue.shift();
             const current = await User.findOne({ userId: currentId });
             
-            if (!current) continue;
-            
-            // Check left child
             if (!current.leftChild) {
-                console.log(`✅ Auto: Found available left position under ${currentId}`);
                 return { parentId: current.userId, position: 'left' };
-            } else {
-                queue.push(current.leftChild);
+            }
+            if (!current.rightChild) {
+                return { parentId: current.userId, position: 'right' };
             }
             
-            // Check right child
-            if (!current.rightChild) {
-                console.log(`✅ Auto: Found available right position under ${currentId}`);
-                return { parentId: current.userId, position: 'right' };
-            } else {
-                queue.push(current.rightChild);
-            }
+            if (current.leftChild) queue.push(current.leftChild);
+            if (current.rightChild) queue.push(current.rightChild);
         }
-        
-        console.log('❌ Auto: No position found in entire tree');
         return null;
     }
     
-    // Manual left/right selection (backward compatibility)
     if (position === 'left' && !sponsor.leftChild) {
         return { parentId: sponsorId, position: 'left' };
     }
@@ -550,7 +528,6 @@ async function findPosition(sponsorId, position) {
         return { parentId: sponsorId, position: 'right' };
     }
     
-    // For manual selection, search deeper if direct position is taken
     const queue = [sponsorId];
     while (queue.length > 0) {
         const currentId = queue.shift();
@@ -966,7 +943,7 @@ app.post('/api/verify-otp', (req, res) => {
     }
 });
 
-// ✅ REGISTER ROUTE (with auto position)
+// Register
 app.post('/api/register', async (req, res) => {
     try {
         const { sponsorId, name, mobile, email, position } = req.body;
@@ -985,10 +962,9 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ error: 'Invalid Sponsor ID' });
         }
         
-        // Find position - now handles 'auto' correctly
         const positionData = await findPosition(sponsorId, position);
         if (!positionData) {
-            return res.status(400).json({ error: 'No position available in the tree' });
+            return res.status(400).json({ error: 'No position available' });
         }
         
         const userId = generateUserId();
@@ -1006,7 +982,6 @@ app.post('/api/register', async (req, res) => {
             expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         });
         
-        // Update parent's child
         if (positionData.position === 'left') {
             await User.findOneAndUpdate(
                 { userId: positionData.parentId },
@@ -1019,12 +994,9 @@ app.post('/api/register', async (req, res) => {
             );
         }
         
-        // Update sponsor's direct count
         sponsor.directCount += 1;
         await sponsor.save();
         await updateUserLevel(sponsorId);
-        
-        // Send welcome email
         await sendEmail(email, 'Welcome to LIRA Family!', generateWelcomeEmail(name, userId, mobile));
         
         res.json({ 
@@ -2633,6 +2605,277 @@ app.post('/api/admin/login', async (req, res) => {
     }
 });
 
+// ✅ Get All Categories
+app.get('/api/admin/categories', async (req, res) => {
+    try {
+        if (req.session.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        
+        const categories = await Category.find({ status: 'active' });
+        res.json(categories);
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+});
+
+// ✅ Add Category
+app.post('/api/admin/categories/add', async (req, res) => {
+    try {
+        if (req.session.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        
+        const { name, purchaseRate, expense, making, packing, deliveryCharge, gst } = req.body;
+        
+        // Check if category exists
+        const existing = await Category.findOne({ name });
+        if (existing) {
+            return res.status(400).json({ success: false, error: 'Category already exists' });
+        }
+        
+        const category = await Category.create({
+            name,
+            purchaseRate: Number(purchaseRate),
+            expense: Number(expense),
+            making: Number(making),
+            packing: Number(packing),
+            deliveryCharge: Number(deliveryCharge),
+            gst: Number(gst)
+        });
+        
+        res.json({
+            success: true,
+            message: 'Category added successfully',
+            category
+        });
+        
+    } catch (error) {
+        console.error('Add category error:', error);
+        res.status(500).json({ success: false, error: 'Failed to add category' });
+    }
+});
+
+// ✅ Update Category
+app.put('/api/admin/categories/:name', async (req, res) => {
+    try {
+        if (req.session.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        
+        const category = await Category.findOneAndUpdate(
+            { name: req.params.name },
+            {
+                name: req.body.name,
+                purchaseRate: Number(req.body.purchaseRate),
+                expense: Number(req.body.expense),
+                making: Number(req.body.making),
+                packing: Number(req.body.packing),
+                deliveryCharge: Number(req.body.deliveryCharge),
+                gst: Number(req.body.gst)
+            },
+            { new: true }
+        );
+        
+        if (!category) {
+            return res.status(404).json({ success: false, error: 'Category not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Category updated successfully',
+            category
+        });
+        
+    } catch (error) {
+        console.error('Update category error:', error);
+        res.status(500).json({ success: false, error: 'Failed to update category' });
+    }
+});
+
+// ✅ Delete Category
+app.delete('/api/admin/categories/:name', async (req, res) => {
+    try {
+        if (req.session.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        
+        const category = await Category.findOneAndDelete({ name: req.params.name });
+        
+        if (!category) {
+            return res.status(404).json({ success: false, error: 'Category not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Category deleted successfully'
+        });
+        
+    } catch (error) {
+        console.error('Delete category error:', error);
+        res.status(500).json({ success: false, error: 'Failed to delete category' });
+    }
+});
+
+// ✅ Get All Products
+app.get('/api/admin/products', async (req, res) => {
+    try {
+        if (req.session.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        
+        const { status = 'all' } = req.query;
+        let query = {};
+        if (status !== 'all') query.status = status;
+        
+        const products = await Product.find(query).sort({ createdAt: -1 });
+        
+        res.json({
+            success: true,
+            products
+        });
+        
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        res.status(500).json({ error: 'Failed to fetch products' });
+    }
+});
+
+// ✅ Add Product
+app.post('/api/admin/products/add', upload.array('images', 5), async (req, res) => {
+    try {
+        if (req.session.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        
+        const {
+            name, category, subCategory, description,
+            weight, purity, price, bv, dp, stock
+        } = req.body;
+        
+        // Get category settings for calculations
+        const categoryData = await Category.findOne({ name: category });
+        if (!categoryData) {
+            return res.status(400).json({ success: false, error: 'Category not found' });
+        }
+        
+        // Calculate charges based on category
+        const makingCharge = (Number(price) * categoryData.making) / 100;
+        const packingCharge = (Number(price) * categoryData.packing) / 100;
+        const deliveryCharge = (Number(price) * categoryData.deliveryCharge) / 100;
+        const gst = (Number(price) * categoryData.gst) / 100;
+        
+        const productId = 'PROD' + Date.now() + Math.floor(Math.random() * 1000);
+        
+        const product = await Product.create({
+            productId,
+            name,
+            category,
+            subCategory,
+            description,
+            images: req.files?.map(f => f.filename) || [],
+            weight: Number(weight),
+            purity,
+            makingCharge,
+            packingCharge,
+            deliveryCharge,
+            gst,
+            price: Number(price),
+            bv: Number(bv),
+            dp: Number(dp),
+            stock: Number(stock)
+        });
+        
+        res.json({
+            success: true,
+            message: 'Product added successfully',
+            product
+        });
+        
+    } catch (error) {
+        console.error('Add product error:', error);
+        res.status(500).json({ success: false, error: 'Failed to add product' });
+    }
+});
+
+// ✅ Update Product
+app.post('/api/admin/products/update/:productId', upload.array('images', 5), async (req, res) => {
+    try {
+        if (req.session.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        
+        const product = await Product.findOne({ productId: req.params.productId });
+        if (!product) {
+            return res.status(404).json({ success: false, error: 'Product not found' });
+        }
+        
+        const updateData = req.body;
+        
+        // Update fields
+        if (updateData.name) product.name = updateData.name;
+        if (updateData.category) product.category = updateData.category;
+        if (updateData.subCategory) product.subCategory = updateData.subCategory;
+        if (updateData.description) product.description = updateData.description;
+        if (updateData.weight) product.weight = Number(updateData.weight);
+        if (updateData.purity) product.purity = updateData.purity;
+        if (updateData.price) {
+            product.price = Number(updateData.price);
+            
+            // Recalculate charges if price changed
+            const categoryData = await Category.findOne({ name: product.category });
+            if (categoryData) {
+                product.makingCharge = (product.price * categoryData.making) / 100;
+                product.packingCharge = (product.price * categoryData.packing) / 100;
+                product.deliveryCharge = (product.price * categoryData.deliveryCharge) / 100;
+                product.gst = (product.price * categoryData.gst) / 100;
+            }
+        }
+        if (updateData.bv) product.bv = Number(updateData.bv);
+        if (updateData.dp) product.dp = Number(updateData.dp);
+        if (updateData.stock) product.stock = Number(updateData.stock);
+        if (updateData.status) product.status = updateData.status;
+        
+        // Add new images
+        if (req.files && req.files.length > 0) {
+            product.images = [...product.images, ...req.files.map(f => f.filename)];
+        }
+        
+        await product.save();
+        
+        res.json({
+            success: true,
+            message: 'Product updated successfully',
+            product
+        });
+        
+    } catch (error) {
+        console.error('Update product error:', error);
+        res.status(500).json({ success: false, error: 'Failed to update product' });
+    }
+});
+
+// ✅ Delete Product
+app.delete('/api/admin/products/:productId', async (req, res) => {
+    try {
+        if (req.session.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        
+        await Product.findOneAndDelete({ productId: req.params.productId });
+        
+        res.json({
+            success: true,
+            message: 'Product deleted successfully'
+        });
+        
+    } catch (error) {
+        console.error('Delete product error:', error);
+        res.status(500).json({ success: false, error: 'Failed to delete product' });
+    }
+});
+
 // Admin Dashboard Stats
 app.get('/api/admin/dashboard', async (req, res) => {
     try {
@@ -2852,197 +3095,6 @@ app.post('/api/admin/members/update', async (req, res) => {
     } catch (error) {
         console.error('Update member error:', error);
         res.status(500).json({ error: 'Failed to update member' });
-    }
-});
-
-// Add Product (Admin)
-app.post('/api/admin/products/add', upload.array('images', 5), async (req, res) => {
-    try {
-        if (req.session.role !== 'admin') {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-        
-        const {
-            name, category, subCategory, description,
-            weight, purity, price, bv, dp, stock
-        } = req.body;
-        
-        const categoryData = await Category.findOne({ name: category });
-        if (!categoryData) {
-            return res.status(400).json({ error: 'Category not found' });
-        }
-        
-        const makingCharge = (price * categoryData.making) / 100;
-        const packingCharge = (price * categoryData.packing) / 100;
-        const deliveryCharge = (price * categoryData.deliveryCharge) / 100;
-        const gst = (price * categoryData.gst) / 100;
-        
-        const productId = 'PROD' + Date.now() + Math.floor(Math.random() * 1000);
-        
-        const product = await Product.create({
-            productId,
-            name,
-            category,
-            subCategory,
-            description,
-            images: req.files?.map(f => f.filename) || [],
-            weight: Number(weight),
-            purity,
-            makingCharge,
-            packingCharge,
-            deliveryCharge,
-            gst,
-            price: Number(price),
-            bv: Number(bv),
-            dp: Number(dp),
-            stock: Number(stock)
-        });
-        
-        res.json({
-            success: true,
-            message: 'Product added successfully',
-            product
-        });
-        
-    } catch (error) {
-        console.error('Add product error:', error);
-        res.status(500).json({ error: 'Failed to add product' });
-    }
-});
-
-// Update Product (Admin)
-app.post('/api/admin/products/update/:productId', upload.array('images', 5), async (req, res) => {
-    try {
-        if (req.session.role !== 'admin') {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-        
-        const product = await Product.findOne({ productId: req.params.productId });
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-        
-        const updateData = req.body;
-        
-        if (updateData.name) product.name = updateData.name;
-        if (updateData.category) product.category = updateData.category;
-        if (updateData.subCategory) product.subCategory = updateData.subCategory;
-        if (updateData.description) product.description = updateData.description;
-        if (updateData.weight) product.weight = Number(updateData.weight);
-        if (updateData.purity) product.purity = updateData.purity;
-        if (updateData.price) {
-            product.price = Number(updateData.price);
-            
-            const categoryData = await Category.findOne({ name: product.category });
-            if (categoryData) {
-                product.makingCharge = (product.price * categoryData.making) / 100;
-                product.packingCharge = (product.price * categoryData.packing) / 100;
-                product.deliveryCharge = (product.price * categoryData.deliveryCharge) / 100;
-                product.gst = (product.price * categoryData.gst) / 100;
-            }
-        }
-        if (updateData.bv) product.bv = Number(updateData.bv);
-        if (updateData.dp) product.dp = Number(updateData.dp);
-        if (updateData.stock) product.stock = Number(updateData.stock);
-        if (updateData.status) product.status = updateData.status;
-        
-        if (req.files && req.files.length > 0) {
-            product.images = [...product.images, ...req.files.map(f => f.filename)];
-        }
-        
-        await product.save();
-        
-        res.json({
-            success: true,
-            message: 'Product updated successfully',
-            product
-        });
-        
-    } catch (error) {
-        console.error('Update product error:', error);
-        res.status(500).json({ error: 'Failed to update product' });
-    }
-});
-
-// Delete Product (Admin)
-app.delete('/api/admin/products/:productId', async (req, res) => {
-    try {
-        if (req.session.role !== 'admin') {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-        
-        await Product.findOneAndDelete({ productId: req.params.productId });
-        
-        res.json({ success: true, message: 'Product deleted successfully' });
-        
-    } catch (error) {
-        console.error('Delete product error:', error);
-        res.status(500).json({ error: 'Failed to delete product' });
-    }
-});
-
-// Add Category (Admin)
-app.post('/api/admin/categories/add', async (req, res) => {
-    try {
-        if (req.session.role !== 'admin') {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-        
-        const { name, purchaseRate, expense, making, packing, deliveryCharge, gst } = req.body;
-        
-        const existing = await Category.findOne({ name });
-        if (existing) {
-            return res.status(400).json({ error: 'Category already exists' });
-        }
-        
-        const category = await Category.create({
-            name,
-            purchaseRate: Number(purchaseRate),
-            expense: Number(expense),
-            making: Number(making),
-            packing: Number(packing),
-            deliveryCharge: Number(deliveryCharge),
-            gst: Number(gst)
-        });
-        
-        res.json({
-            success: true,
-            message: 'Category added successfully',
-            category
-        });
-        
-    } catch (error) {
-        console.error('Add category error:', error);
-        res.status(500).json({ error: 'Failed to add category' });
-    }
-});
-
-// Update Category (Admin)
-app.put('/api/admin/categories/:name', async (req, res) => {
-    try {
-        if (req.session.role !== 'admin') {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-        
-        const category = await Category.findOneAndUpdate(
-            { name: req.params.name },
-            req.body,
-            { new: true }
-        );
-        
-        if (!category) {
-            return res.status(404).json({ error: 'Category not found' });
-        }
-        
-        res.json({
-            success: true,
-            message: 'Category updated successfully',
-            category
-        });
-        
-    } catch (error) {
-        console.error('Update category error:', error);
-        res.status(500).json({ error: 'Failed to update category' });
     }
 });
 
