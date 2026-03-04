@@ -369,63 +369,40 @@ const Reward = mongoose.model('Reward', rewardSchema);
 const Award = mongoose.model('Award', awardSchema);
 const Delivery = mongoose.model('Delivery', deliverySchema);
 
-// ==================== EMAIL CONFIG (Maileroo HTTP API - Render Friendly) ====================
+// ==================== EMAIL CONFIG (BREVO - PRODUCTION READY) ====================
+const transporter = nodemailer.createTransport({
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
+    auth: {
+        user: process.env.BREVO_EMAIL || 'gbusiness051@gmail.com',
+        pass: process.env.BREVO_SMTP_KEY
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
+});
 
-// ✅ HTTP API version for Maileroo (SMTP se better hai, Render pe block nahi hoga)
 async function sendEmail(to, subject, html) {
     try {
-        console.log(`📧 Attempting to send email to: ${to}`);
-
-        // API request body bana rahe hain
-        const requestBody = {
-            from: {
-                address: 'gbusiness051@gmail.com', // Teri company email
-                display_name: 'LIRA MLM'
-            },
-            to: [
-                {
-                    address: to
-                }
-            ],
+        console.log(`📧 Sending email to: ${to}`);
+        console.log(`📧 Using Brevo SMTP with email: ${process.env.BREVO_EMAIL}`);
+        
+        const mailOptions = {
+            from: `"LIRA MLM" <${process.env.BREVO_EMAIL}>`,
+            to: to,
             subject: subject,
-            html: html,
-            tracking: true
+            html: html
         };
-
-        console.log('📧 Request body:', JSON.stringify(requestBody, null, 2));
-
-        // API call
-        const response = await fetch('https://smtp.maileroo.com/api/v2/emails', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Api-Key': process.env.MAILEROO_API_KEY // Render ka variable
-            },
-            body: JSON.stringify(requestBody)
-        });
-
-        const responseText = await response.text();
-        console.log('📧 Raw response:', responseText);
-
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (e) {
-            console.error('❌ Failed to parse response:', responseText);
-            return false;
-        }
-
-        console.log('📧 Parsed response:', data);
-
-        if (response.ok && data.success) {
-            console.log('✅ Email sent successfully!');
-            return true;
-        } else {
-            console.error('❌ Maileroo error:', data.message || 'Unknown error');
-            return false;
-        }
+        
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`✅ Email sent: ${info.messageId}`);
+        console.log(`✅ Response: ${info.response}`);
+        return true;
     } catch (error) {
         console.error('❌ Email error:', error);
+        console.error('❌ Error code:', error.code);
+        console.error('❌ Error command:', error.command);
         return false;
     }
 }
@@ -841,9 +818,9 @@ app.get('/api/test-email', async (req, res) => {
         console.log('📧 Test email route called');
         
         const testEmail = 'nikhilsp369@gmail.com';
-        const testHTML = '<h1>Test Email from LIRA</h1><p>Ye ek test email hai.</p>';
+        const testHTML = '<h1>✅ Test Email from LIRA</h1><p>Brevo SMTP working perfectly!</p><p>Time: ' + new Date().toLocaleString() + '</p>';
         
-        const sent = await sendEmail(testEmail, 'Test Email - LIRA', testHTML);
+        const sent = await sendEmail(testEmail, '✅ Test Email - LIRA', testHTML);
         
         if (sent) {
             res.json({ success: true, message: 'Test email sent!' });
