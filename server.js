@@ -805,7 +805,87 @@ function generateBirthdayEmail(name) {
 
 // ==================== USER ROUTES ====================
 
-// ✅ FIXED: Register with PLAIN TEXT password
+// ✅ Send OTP
+app.post('/api/send-otp', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, error: 'Email is required' });
+        }
+
+        const otp = generateOTP();
+
+        // Store OTP in session
+        req.session.otp = otp;
+        req.session.otpEmail = email;
+        req.session.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+        // Send email
+        const emailSent = await sendEmail(
+            email,
+            'Your OTP for Registration - LIRA',
+            `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
+                    <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
+                        <h1 style="color: #333;">Email Verification</h1>
+                        <p style="font-size: 16px; color: #666;">Your OTP for registration is:</p>
+                        <h2 style="font-size: 36px; color: #4CAF50; letter-spacing: 5px;">${otp}</h2>
+                        <p style="color: #999;">This OTP is valid for 10 minutes.</p>
+                        <p style="color: #666;">If you didn't request this, please ignore this email.</p>
+                    </div>
+                </div>
+            `
+        );
+
+        if (emailSent) {
+            res.json({ success: true, message: 'OTP sent successfully' });
+        } else {
+            res.status(500).json({ success: false, error: 'Failed to send OTP' });
+        }
+    } catch (error) {
+        console.error('Send OTP error:', error);
+        res.status(500).json({ success: false, error: 'Failed to send OTP' });
+    }
+});
+
+// ✅ Verify OTP
+app.post('/api/verify-otp', (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({ success: false, error: 'Email and OTP are required' });
+        }
+
+        // Check if OTP exists in session
+        if (!req.session.otp || !req.session.otpEmail || !req.session.otpExpiry) {
+            return res.status(400).json({ success: false, error: 'OTP expired or not sent' });
+        }
+
+        // Check expiry
+        if (Date.now() > req.session.otpExpiry) {
+            return res.status(400).json({ success: false, error: 'OTP expired' });
+        }
+
+        // Verify OTP
+        if (req.session.otp !== otp || req.session.otpEmail !== email) {
+            return res.status(400).json({ success: false, error: 'Invalid OTP' });
+        }
+
+        // Clear OTP from session
+        delete req.session.otp;
+        delete req.session.otpEmail;
+        delete req.session.otpExpiry;
+
+        res.json({ success: true, message: 'OTP verified successfully' });
+    } catch (error) {
+        console.error('Verify OTP error:', error);
+        res.status(500).json({ success: false, error: 'Failed to verify OTP' });
+    }
+});
+
+// ✅ Register with PLAIN TEXT password
 app.post('/api/register', async (req, res) => {
     try {
         const { sponsorId, name, mobile, email, position } = req.body;
@@ -847,7 +927,7 @@ app.post('/api/register', async (req, res) => {
             mobile,
             email,
             password: plainPassword, // ← PLAIN TEXT
-            position,
+            position: positionData.position,
             joinDate: new Date(),
             expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
         });
