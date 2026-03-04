@@ -369,40 +369,44 @@ const Reward = mongoose.model('Reward', rewardSchema);
 const Award = mongoose.model('Award', awardSchema);
 const Delivery = mongoose.model('Delivery', deliverySchema);
 
-// ==================== EMAIL CONFIG (BREVO - PRODUCTION READY) ====================
-const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.BREVO_EMAIL || 'gbusiness051@gmail.com',
-        pass: process.env.BREVO_SMTP_KEY
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-});
-
+// ==================== EMAIL CONFIG (BREVO HTTP API - RENDER FRIENDLY) ====================
 async function sendEmail(to, subject, html) {
     try {
         console.log(`📧 Sending email to: ${to}`);
-        console.log(`📧 Using Brevo SMTP with email: ${process.env.BREVO_EMAIL}`);
         
-        const mailOptions = {
-            from: `"LIRA MLM" <${process.env.BREVO_EMAIL}>`,
-            to: to,
-            subject: subject,
-            html: html
-        };
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': process.env.BREVO_API_KEY,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                sender: {
+                    name: 'LIRA MLM',
+                    email: process.env.BREVO_EMAIL || 'gbusiness051@gmail.com'
+                },
+                to: [{
+                    email: to,
+                    name: 'User'
+                }],
+                subject: subject,
+                htmlContent: html
+            })
+        });
+
+        const data = await response.json();
+        console.log('✅ Brevo response:', data);
         
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`✅ Email sent: ${info.messageId}`);
-        console.log(`✅ Response: ${info.response}`);
-        return true;
+        if (response.ok) {
+            console.log('✅ Email sent successfully!');
+            return true;
+        } else {
+            console.error('❌ Brevo error:', data);
+            return false;
+        }
     } catch (error) {
         console.error('❌ Email error:', error);
-        console.error('❌ Error code:', error.code);
-        console.error('❌ Error command:', error.command);
         return false;
     }
 }
@@ -818,7 +822,7 @@ app.get('/api/test-email', async (req, res) => {
         console.log('📧 Test email route called');
         
         const testEmail = 'nikhilsp369@gmail.com';
-        const testHTML = '<h1>✅ Test Email from LIRA</h1><p>Brevo SMTP working perfectly!</p><p>Time: ' + new Date().toLocaleString() + '</p>';
+        const testHTML = '<h1>✅ Test Email from LIRA</h1><p>Brevo HTTP API working perfectly!</p><p>Time: ' + new Date().toLocaleString() + '</p>';
         
         const sent = await sendEmail(testEmail, '✅ Test Email - LIRA', testHTML);
         
