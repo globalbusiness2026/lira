@@ -454,7 +454,7 @@ async function sendEmail(to, subject, html) {
         });
         return true;
     } catch (error) {
-        console.error('Email error:', error);
+        console.error('❌ Email error:', error);
         return false;
     }
 }
@@ -464,7 +464,6 @@ async function findPosition(sponsorId, position) {
     const sponsor = await User.findOne({ userId: sponsorId });
     if (!sponsor) return null;
     
-    // Check if position is available at sponsor level
     if (position === 'left' && !sponsor.leftChild) {
         return { parentId: sponsorId, position: 'left' };
     }
@@ -472,7 +471,6 @@ async function findPosition(sponsorId, position) {
         return { parentId: sponsorId, position: 'right' };
     }
     
-    // Auto-fill logic - find next available position
     const queue = [sponsorId];
     while (queue.length > 0) {
         const currentId = queue.shift();
@@ -497,20 +495,16 @@ async function updateUserLevel(userId) {
     const user = await User.findOne({ userId });
     if (!user) return;
     
-    // Count active directs
     const activeDirects = await User.countDocuments({ 
         sponsorId: userId, 
         status: 'active',
         expiryDate: { $gt: new Date() }
     });
     
-    // Get level settings
     const levelSettings = await Settings.findOne({ type: 'levelSettings' });
     if (!levelSettings) return;
     
-    let newLevel = 5; // Base level
-    
-    // Check level unlock requirements
+    let newLevel = 5;
     const requirements = levelSettings.values.levelRequirements || [
         { level: 6, directs: 11 },
         { level: 7, directs: 12 },
@@ -542,13 +536,11 @@ async function distributeIncome(orderId, userId, amount, type, metadata = {}) {
     const user = await User.findOne({ userId });
     if (!user) return;
     
-    // Get income settings
     const incomeSettings = await Settings.findOne({ type: 'incomeSettings' });
     if (!incomeSettings) return;
     
     const levelPercentages = incomeSettings.values.levelIncome || [10, 5, 3, 2, 1, 0.5, 0.3, 0.2, 0.1, 0.05];
     
-    // Distribute to uplines
     let currentUserId = user.sponsorId;
     let level = 1;
     
@@ -556,7 +548,6 @@ async function distributeIncome(orderId, userId, amount, type, metadata = {}) {
         const upline = await User.findOne({ userId: currentUserId });
         if (!upline) break;
         
-        // Check if upline is active
         const isActive = upline.status === 'active' && 
                         upline.expiryDate && 
                         upline.expiryDate > new Date();
@@ -565,7 +556,6 @@ async function distributeIncome(orderId, userId, amount, type, metadata = {}) {
         const levelIncome = (amount * levelPercent) / 100;
         
         if (isActive && levelIncome > 0) {
-            // Credit income
             await Income.create({
                 userId: upline.userId,
                 fromUserId: userId,
@@ -580,14 +570,12 @@ async function distributeIncome(orderId, userId, amount, type, metadata = {}) {
             upline.totalIncome += levelIncome;
             await upline.save();
             
-            // Send email notification
             await sendEmail(
                 upline.email,
                 'Income Credited - LIRA',
                 generateIncomeEmail(upline.name, levelIncome, level)
             );
         } else {
-            // Lapsed income
             await Income.create({
                 userId: upline.userId,
                 fromUserId: userId,
@@ -615,17 +603,14 @@ async function generateICard(userId) {
     
     doc.pipe(stream);
     
-    // Design I-Card
     doc.rect(0, 0, doc.page.width, doc.page.height).fill('#f0f0f0');
     
-    // Header
     doc.fillColor('#333')
        .fontSize(20)
        .text('LIRA MLM', 50, 50)
        .fontSize(12)
        .text('Member Identification Card', 50, 80);
     
-    // Photo
     if (user.profilePic) {
         doc.image(user.profilePic, 50, 120, { width: 100 });
     } else {
@@ -635,7 +620,6 @@ async function generateICard(userId) {
            .text('No Photo', 70, 170);
     }
     
-    // Details
     doc.fillColor('#000')
        .fontSize(12)
        .text(`Name: ${user.name}`, 170, 120)
@@ -649,7 +633,6 @@ async function generateICard(userId) {
            .text(`${user.address.state} - ${user.address.pincode}`, 170, 240);
     }
     
-    // QR Code
     const qrData = JSON.stringify({
         userId: user.userId,
         name: user.name,
@@ -662,7 +645,6 @@ async function generateICard(userId) {
         }
     });
     
-    // Footer
     doc.fontSize(8)
        .fillColor('#666')
        .text('This is a digitally generated ID card', 50, 550)
@@ -801,11 +783,9 @@ function generateBirthdayEmail(name) {
     `;
 }
 
-// ==================== API ROUTES ====================
-
 // ==================== USER ROUTES ====================
 
-// ✅ Send OTP
+// ✅ SEND OTP ROUTE (FIXED)
 app.post('/api/send-otp', async (req, res) => {
     try {
         const { email } = req.body;
@@ -816,12 +796,10 @@ app.post('/api/send-otp', async (req, res) => {
 
         const otp = generateOTP();
 
-        // Store OTP in session
         req.session.otp = otp;
         req.session.otpEmail = email;
-        req.session.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+        req.session.otpExpiry = Date.now() + 10 * 60 * 1000;
 
-        // Send email
         const emailSent = await sendEmail(
             email,
             'Your OTP for Registration - LIRA',
@@ -849,7 +827,7 @@ app.post('/api/send-otp', async (req, res) => {
     }
 });
 
-// ✅ Verify OTP
+// ✅ VERIFY OTP ROUTE (FIXED)
 app.post('/api/verify-otp', (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -858,22 +836,18 @@ app.post('/api/verify-otp', (req, res) => {
             return res.status(400).json({ success: false, error: 'Email and OTP are required' });
         }
 
-        // Check if OTP exists in session
         if (!req.session.otp || !req.session.otpEmail || !req.session.otpExpiry) {
             return res.status(400).json({ success: false, error: 'OTP expired or not sent' });
         }
 
-        // Check expiry
         if (Date.now() > req.session.otpExpiry) {
             return res.status(400).json({ success: false, error: 'OTP expired' });
         }
 
-        // Verify OTP
         if (req.session.otp !== otp || req.session.otpEmail !== email) {
             return res.status(400).json({ success: false, error: 'Invalid OTP' });
         }
 
-        // Clear OTP from session
         delete req.session.otp;
         delete req.session.otpEmail;
         delete req.session.otpExpiry;
@@ -885,54 +859,45 @@ app.post('/api/verify-otp', (req, res) => {
     }
 });
 
-// ✅ Register with PLAIN TEXT password
+// Register
 app.post('/api/register', async (req, res) => {
     try {
         const { sponsorId, name, mobile, email, position } = req.body;
         
-        // Validation
         if (!sponsorId || !name || !mobile || !email || !position) {
             return res.status(400).json({ error: 'All fields are required' });
         }
         
-        // Check if user exists
         const existingUser = await User.findOne({ $or: [{ mobile }, { email }] });
         if (existingUser) {
             return res.status(400).json({ error: 'Mobile or Email already registered' });
         }
         
-        // Check sponsor
         const sponsor = await User.findOne({ userId: sponsorId });
         if (!sponsor) {
             return res.status(400).json({ error: 'Invalid Sponsor ID' });
         }
         
-        // Find position in binary tree
         const positionData = await findPosition(sponsorId, position);
         if (!positionData) {
             return res.status(400).json({ error: 'No position available in the selected leg' });
         }
         
-        // Generate user ID
         const userId = generateUserId();
-        
-        // 🔑 PLAIN TEXT PASSWORD (mobile number as password)
         const plainPassword = mobile;
         
-        // Create user with plain text password
         const user = await User.create({
             userId,
             sponsorId,
             name,
             mobile,
             email,
-            password: plainPassword, // ← PLAIN TEXT
+            password: plainPassword,
             position: positionData.position,
             joinDate: new Date(),
-            expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+            expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         });
         
-        // Update parent's child
         if (positionData.position === 'left') {
             await User.findOneAndUpdate(
                 { userId: positionData.parentId },
@@ -945,14 +910,9 @@ app.post('/api/register', async (req, res) => {
             );
         }
         
-        // Update sponsor's direct count
         sponsor.directCount += 1;
         await sponsor.save();
-        
-        // Update sponsor's level
         await updateUserLevel(sponsorId);
-        
-        // Send welcome email
         await sendEmail(email, 'Welcome to LIRA Family!', generateWelcomeEmail(name, userId, mobile));
         
         res.json({ 
@@ -978,15 +938,12 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid User ID' });
         }
         
-        // Direct string comparison for plain text
         if (password !== user.password) {
             return res.status(400).json({ error: 'Invalid Password' });
         }
         
-        // Check if password needs change (if still mobile number)
         const isDefaultPassword = (password === user.mobile);
         
-        // Create session
         req.session.userId = user.userId;
         req.session.role = user.role;
         
@@ -1068,15 +1025,12 @@ app.post('/api/forgot-password', async (req, res) => {
             return res.status(400).json({ error: 'Invalid User ID or Email' });
         }
         
-        // Generate OTP
         const otp = generateOTP();
         
-        // Store OTP in session
         req.session.resetOTP = otp;
         req.session.resetUserId = userId;
-        req.session.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+        req.session.otpExpiry = Date.now() + 10 * 60 * 1000;
         
-        // Send email with OTP
         await sendEmail(
             email,
             'Password Reset OTP - LIRA',
@@ -1117,13 +1071,11 @@ app.post('/api/reset-password', async (req, res) => {
             return res.status(400).json({ error: 'Invalid OTP' });
         }
         
-        // Store plain text password
         await User.findOneAndUpdate(
             { userId: req.session.resetUserId },
-            { password: newPassword } // Plain text
+            { password: newPassword }
         );
         
-        // Clear session data
         delete req.session.resetOTP;
         delete req.session.resetUserId;
         delete req.session.otpExpiry;
@@ -1136,7 +1088,7 @@ app.post('/api/reset-password', async (req, res) => {
     }
 });
 
-// Change Password (Logged in user)
+// Change Password
 app.post('/api/change-password', async (req, res) => {
     try {
         if (!req.session.userId) {
@@ -1147,12 +1099,11 @@ app.post('/api/change-password', async (req, res) => {
         
         const user = await User.findOne({ userId: req.session.userId });
         
-        // Plain text comparison
         if (currentPassword !== user.password) {
             return res.status(400).json({ error: 'Current password is incorrect' });
         }
         
-        user.password = newPassword; // Plain text
+        user.password = newPassword;
         await user.save();
         
         res.json({ success: true, message: 'Password changed successfully' });
@@ -1202,7 +1153,6 @@ app.post('/api/activation-request', upload.single('screenshot'), async (req, res
         
         const { paymentMethod, utrNumber } = req.body;
         
-        // Get activation amount from settings
         const activationSettings = await Settings.findOne({ type: 'activationSettings' });
         const amount = activationSettings?.values?.amount || 499;
         
@@ -1303,12 +1253,10 @@ app.post('/api/cart/add', async (req, res) => {
             return res.status(400).json({ error: 'Insufficient stock' });
         }
         
-        // Initialize cart if not exists
         if (!req.session.cart) {
             req.session.cart = [];
         }
         
-        // Check if product already in cart
         const existingItem = req.session.cart.find(item => item.productId === productId);
         if (existingItem) {
             existingItem.quantity += quantity;
@@ -1390,12 +1338,10 @@ app.post('/api/checkout', async (req, res) => {
         
         const user = await User.findOne({ userId: req.session.userId });
         
-        // Check if user is active
         if (user.status !== 'active') {
             return res.status(400).json({ error: 'Please activate your account first' });
         }
         
-        // Calculate totals
         let totalAmount = 0;
         let totalBV = 0;
         let totalDP = 0;
@@ -1427,21 +1373,17 @@ app.post('/api/checkout', async (req, res) => {
                 weight: product.weight
             });
             
-            // Update stock
             product.stock -= item.quantity;
             await product.save();
         }
         
-        // Check wallet balance
         if (user.wallet < totalAmount) {
             return res.status(400).json({ error: 'Insufficient wallet balance' });
         }
         
-        // Check if this is first purchase
         const existingOrders = await Order.countDocuments({ userId: user.userId });
         const isFirstPurchase = existingOrders === 0;
         
-        // Create order
         const orderId = generateOrderId();
         const order = await Order.create({
             orderId,
@@ -1459,24 +1401,20 @@ app.post('/api/checkout', async (req, res) => {
             isFirstPurchase
         });
         
-        // Deduct from wallet
         user.wallet -= totalAmount;
         user.totalPurchase += totalAmount;
         user.totalPurchaseCount += 1;
         
-        // Update activation if not active (purchase activates account)
         if (user.status !== 'active') {
             user.status = 'active';
             user.activationDate = new Date();
             user.expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
         } else {
-            // Extend activation by 30 days from current expiry
             user.expiryDate = new Date(user.expiryDate.getTime() + 30 * 24 * 60 * 60 * 1000);
         }
         
         await user.save();
         
-        // Get income settings for first purchase vs repurchase
         const incomeSettings = await Settings.findOne({ type: 'incomeSettings' });
         const firstPurchasePercent = incomeSettings?.values?.firstPurchase || 10;
         const repurchasePercent = incomeSettings?.values?.repurchase || 5;
@@ -1484,10 +1422,8 @@ app.post('/api/checkout', async (req, res) => {
         const distributePercent = isFirstPurchase ? firstPurchasePercent : repurchasePercent;
         const distributeAmount = (totalAmount * distributePercent) / 100;
         
-        // Distribute income
         await distributeIncome(orderId, user.userId, distributeAmount, 'purchase');
         
-        // Distribute making + packing if configured
         const makingPackingSettings = await Settings.findOne({ type: 'makingPackingSettings' });
         if (makingPackingSettings?.values?.enabled) {
             let totalMakingPacking = 0;
@@ -1500,10 +1436,8 @@ app.post('/api/checkout', async (req, res) => {
             }
         }
         
-        // Clear cart
         req.session.cart = [];
         
-        // Send order confirmation email
         await sendEmail(
             user.email,
             `Order Confirmed - ${orderId}`,
@@ -1549,7 +1483,6 @@ app.get('/api/orders/:orderId', async (req, res) => {
             return res.status(404).json({ error: 'Order not found' });
         }
         
-        // Check if user owns this order
         if (order.userId !== req.session.userId && req.session.role !== 'admin') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
@@ -1578,7 +1511,6 @@ app.get('/api/invoice/:orderId', async (req, res) => {
         
         doc.pipe(res);
         
-        // Invoice Header
         doc.fontSize(20).text('LIRA MLM', 50, 50);
         doc.fontSize(10).text('GSTIN: 1234567890', 50, 80);
         doc.fontSize(10).text('Address: Mumbai, India', 50, 95);
@@ -1588,7 +1520,6 @@ app.get('/api/invoice/:orderId', async (req, res) => {
         doc.fontSize(10).text(`Date: ${new Date(order.orderDate).toLocaleDateString()}`, 400, 95);
         doc.fontSize(10).text(`Order ID: ${order.orderId}`, 400, 110);
         
-        // Billing Details
         doc.fontSize(12).text('Bill To:', 50, 150);
         doc.fontSize(10).text(user.name, 50, 170);
         doc.fontSize(10).text(user.email, 50, 185);
@@ -1599,7 +1530,6 @@ app.get('/api/invoice/:orderId', async (req, res) => {
             doc.text(`${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`, 50, 230);
         }
         
-        // Products Table
         let y = 280;
         doc.fontSize(10).text('Product', 50, y);
         doc.text('Qty', 300, y);
@@ -1619,13 +1549,11 @@ app.get('/api/invoice/:orderId', async (req, res) => {
         
         doc.moveTo(50, y + 5).lineTo(550, y + 5).stroke();
         
-        // Totals
         y += 30;
         doc.text(`Subtotal: ₹${order.totalAmount}`, 400, y);
         y += 20;
         doc.text(`Total: ₹${order.totalAmount}`, 400, y);
         
-        // Footer
         doc.fontSize(8).text('This is a computer generated invoice', 50, 700);
         
         doc.end();
@@ -1735,11 +1663,9 @@ app.get('/api/team/:userId', async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
         
-        // Get directs
         const directs = await User.find({ sponsorId: req.params.userId })
             .select('userId name mobile status joinDate totalPurchase franchiseStage');
         
-        // Get team stats
         const teamCount = await User.countDocuments({ 
             $or: [
                 { sponsorId: req.params.userId },
@@ -1820,12 +1746,10 @@ app.post('/api/profile/update', upload.fields([
         
         const user = await User.findOne({ userId: req.session.userId });
         
-        // Update basic info
         if (name) user.name = name;
         if (dob) user.dob = new Date(dob);
         if (anniversary) user.anniversary = new Date(anniversary);
         
-        // Update address
         if (address) {
             user.address = {
                 ...user.address,
@@ -1833,7 +1757,6 @@ app.post('/api/profile/update', upload.fields([
             };
         }
         
-        // Update bank details
         if (bankDetails) {
             user.bankDetails = {
                 ...user.bankDetails,
@@ -1841,7 +1764,6 @@ app.post('/api/profile/update', upload.fields([
             };
         }
         
-        // Update documents
         if (req.files) {
             if (req.files.profilePic) {
                 user.profilePic = req.files.profilePic[0].filename;
@@ -1915,14 +1837,12 @@ app.post('/api/withdrawal-request', async (req, res) => {
         
         const user = await User.findOne({ userId: req.session.userId });
         
-        // Check if profile is complete
         if (!user.bankDetails?.accountNumber || !user.documents?.panCard) {
             return res.status(400).json({ 
                 error: 'Please complete your profile with bank details and documents first' 
             });
         }
         
-        // Get withdrawal settings
         const payoutSettings = await Settings.findOne({ type: 'payoutSettings' });
         const minWithdrawal = payoutSettings?.values?.minWithdrawal || 500;
         const maxWithdrawal = payoutSettings?.values?.maxWithdrawal || 50000;
@@ -1958,7 +1878,6 @@ app.post('/api/withdrawal-request', async (req, res) => {
             status: 'pending'
         });
         
-        // Deduct from wallet temporarily
         user.wallet -= amount;
         await user.save();
         
@@ -2002,7 +1921,6 @@ app.get('/api/franchise', async (req, res) => {
         const user = await User.findOne({ userId: req.session.userId });
         
         if (!user.isFranchise) {
-            // Get franchise settings
             const franchiseSettings = await Settings.findOne({ type: 'franchiseSettings' });
             
             return res.json({
@@ -2015,10 +1933,7 @@ app.get('/api/franchise', async (req, res) => {
             });
         }
         
-        // Get franchise data
         const franchise = await Franchise.findOne({ userId: user.userId });
-        
-        // Get assigned deliveries
         const deliveries = await Delivery.find({ franchiseId: user.userId })
             .sort({ deliveryDate: -1 })
             .limit(20);
@@ -2047,7 +1962,6 @@ app.post('/api/franchise/purchase', async (req, res) => {
         
         const user = await User.findOne({ userId: req.session.userId });
         
-        // Calculate total
         let totalAmount = 0;
         const orderProducts = [];
         
@@ -2070,12 +1984,10 @@ app.post('/api/franchise/purchase', async (req, res) => {
             });
         }
         
-        // Check wallet
         if (user.wallet < totalAmount) {
             return res.status(400).json({ error: 'Insufficient wallet balance' });
         }
         
-        // Create franchise order
         const orderId = generateOrderId();
         const order = await Order.create({
             orderId,
@@ -2090,10 +2002,8 @@ app.post('/api/franchise/purchase', async (req, res) => {
             isFranchisePurchase: true
         });
         
-        // Deduct from wallet
         user.wallet -= totalAmount;
         
-        // Update franchise bulk purchase
         if (!user.isFranchise) {
             user.isFranchise = true;
             user.franchiseStage = 'micro';
@@ -2149,7 +2059,6 @@ app.post('/api/delivery/assign', async (req, res) => {
             return res.status(404).json({ error: 'Franchise not found' });
         }
         
-        // Generate OTP
         const otp = generateOTP();
         
         const delivery = await Delivery.create({
@@ -2159,7 +2068,7 @@ app.post('/api/delivery/assign', async (req, res) => {
             customerId: order.userId,
             products: order.products,
             otp,
-            deliveryCharge: order.totalAmount * 0.05, // 5% delivery charge
+            deliveryCharge: order.totalAmount * 0.05,
             status: 'assigned'
         });
         
@@ -2167,14 +2076,12 @@ app.post('/api/delivery/assign', async (req, res) => {
         order.deliveredBy = franchiseId;
         await order.save();
         
-        // Update franchise
         const franchiseDoc = await Franchise.findOne({ userId: franchiseId });
         if (franchiseDoc) {
             franchiseDoc.pendingDelivery += 1;
             await franchiseDoc.save();
         }
         
-        // Send OTP to customer
         const customer = await User.findOne({ userId: order.userId });
         await sendEmail(
             customer.email,
@@ -2228,14 +2135,12 @@ app.post('/api/delivery/complete', async (req, res) => {
         delivery.deliveryDate = new Date();
         await delivery.save();
         
-        // Update order
         const order = await Order.findOne({ orderId: delivery.orderId });
         order.deliveryStatus = 'delivered';
         order.status = 'delivered';
         order.deliveryDate = new Date();
         await order.save();
         
-        // Update franchise
         const franchise = await Franchise.findOne({ userId: req.session.userId });
         if (franchise) {
             franchise.totalDelivery += 1;
@@ -2243,19 +2148,15 @@ app.post('/api/delivery/complete', async (req, res) => {
             await franchise.save();
         }
         
-        // Get delivery charge settings
         const deliverySettings = await Settings.findOne({ type: 'deliverySettings' });
         const franchisePercent = deliverySettings?.values?.franchisePercent || 50;
         
-        // Distribute delivery charge
         const franchiseCommission = (delivery.deliveryCharge * franchisePercent) / 100;
         
-        // Credit franchise
         const franchiseUser = await User.findOne({ userId: req.session.userId });
         franchiseUser.wallet += franchiseCommission;
         await franchiseUser.save();
         
-        // Distribute remaining to uplines
         await distributeIncome(
             delivery.orderId,
             req.session.userId,
@@ -2263,7 +2164,6 @@ app.post('/api/delivery/complete', async (req, res) => {
             'delivery'
         );
         
-        // Send confirmation email
         const customer = await User.findOne({ userId: delivery.customerId });
         await sendEmail(
             customer.email,
@@ -2315,7 +2215,6 @@ app.get('/api/messages/:otherUserId?', async (req, res) => {
             .sort({ timestamp: 1 })
             .limit(100);
         
-        // Mark as read
         if (req.params.otherUserId) {
             await Message.updateMany(
                 {
@@ -2359,7 +2258,6 @@ app.post('/api/messages/send', upload.single('file'), async (req, res) => {
         
         const newMessage = await Message.create(messageData);
         
-        // Emit via socket
         io.to(toUserId).emit('newMessage', newMessage);
         
         res.json({
@@ -2442,7 +2340,6 @@ app.get('/api/dashboard/stats', async (req, res) => {
         
         const user = await User.findOne({ userId: req.session.userId });
         
-        // Get today's stats
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
@@ -2462,7 +2359,6 @@ app.get('/api/dashboard/stats', async (req, res) => {
             orderDate: { $gte: today }
         });
         
-        // Get monthly stats for 12-month wallet
         const currentMonth = new Date().getMonth() + 1;
         const currentYear = new Date().getFullYear();
         
@@ -2478,7 +2374,6 @@ app.get('/api/dashboard/stats', async (req, res) => {
             });
         }
         
-        // Get upcoming birthdays/anniversaries
         const team = await User.find({
             $or: [
                 { sponsorId: user.userId },
@@ -2596,7 +2491,7 @@ app.get('/api/icard/download', async (req, res) => {
 
 // ==================== ADMIN ROUTES ====================
 
-// ✅ FIXED: Admin Login with PLAIN TEXT comparison
+// Admin Login
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { userId, password } = req.body;
@@ -2606,7 +2501,6 @@ app.post('/api/admin/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid admin credentials' });
         }
         
-        // PLAIN TEXT COMPARISON
         if (password !== user.password) {
             return res.status(400).json({ error: 'Invalid admin credentials' });
         }
@@ -2637,7 +2531,6 @@ app.get('/api/admin/dashboard', async (req, res) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        // User stats
         const totalUsers = await User.countDocuments({ role: 'user' });
         const activeUsers = await User.countDocuments({ 
             role: 'user', 
@@ -2649,7 +2542,6 @@ app.get('/api/admin/dashboard', async (req, res) => {
             joinDate: { $gte: today }
         });
         
-        // Purchase stats
         const totalPurchase = await Order.aggregate([
             { $match: { status: 'delivered' } },
             { $group: { _id: null, total: { $sum: '$totalAmount' } } }
@@ -2665,7 +2557,6 @@ app.get('/api/admin/dashboard', async (req, res) => {
             { $group: { _id: null, total: { $sum: '$totalAmount' } } }
         ]);
         
-        // Franchise stats
         const totalFranchise = await User.countDocuments({ isFranchise: true });
         const microFranchise = await User.countDocuments({ franchiseStage: 'micro' });
         const miniFranchise = await User.countDocuments({ franchiseStage: 'mini' });
@@ -2686,7 +2577,6 @@ app.get('/api/admin/dashboard', async (req, res) => {
             { $group: { _id: null, total: { $sum: '$totalAmount' } } }
         ]);
         
-        // Delivery stats
         const totalDeliveries = await Delivery.countDocuments();
         const deliveredToday = await Delivery.countDocuments({
             status: 'delivered',
@@ -2696,7 +2586,6 @@ app.get('/api/admin/dashboard', async (req, res) => {
             status: { $in: ['assigned', 'in_transit'] }
         });
         
-        // Income stats
         const totalIncome = await Income.aggregate([
             { $match: { status: 'credited' } },
             { $group: { _id: null, total: { $sum: '$amount' } } }
@@ -2717,7 +2606,6 @@ app.get('/api/admin/dashboard', async (req, res) => {
             { $group: { _id: null, total: { $sum: '$amount' } } }
         ]);
         
-        // Payout stats
         const totalPaid = await Withdrawal.aggregate([
             { $match: { status: 'processed' } },
             { $group: { _id: null, total: { $sum: '$netAmount' } } }
@@ -2729,7 +2617,6 @@ app.get('/api/admin/dashboard', async (req, res) => {
             requestDate: { $gte: today }
         });
         
-        // Top buyers
         const topBuyers = await User.find({ role: 'user' })
             .sort({ totalPurchase: -1 })
             .limit(10)
@@ -2868,13 +2755,11 @@ app.post('/api/admin/products/add', upload.array('images', 5), async (req, res) 
             weight, purity, price, bv, dp, stock
         } = req.body;
         
-        // Get category settings
         const categoryData = await Category.findOne({ name: category });
         if (!categoryData) {
             return res.status(400).json({ error: 'Category not found' });
         }
         
-        // Calculate charges based on category
         const makingCharge = (price * categoryData.making) / 100;
         const packingCharge = (price * categoryData.packing) / 100;
         const deliveryCharge = (price * categoryData.deliveryCharge) / 100;
@@ -2927,7 +2812,6 @@ app.post('/api/admin/products/update/:productId', upload.array('images', 5), asy
         
         const updateData = req.body;
         
-        // Update fields
         if (updateData.name) product.name = updateData.name;
         if (updateData.category) product.category = updateData.category;
         if (updateData.subCategory) product.subCategory = updateData.subCategory;
@@ -2937,7 +2821,6 @@ app.post('/api/admin/products/update/:productId', upload.array('images', 5), asy
         if (updateData.price) {
             product.price = Number(updateData.price);
             
-            // Recalculate charges if price changed
             const categoryData = await Category.findOne({ name: product.category });
             if (categoryData) {
                 product.makingCharge = (product.price * categoryData.making) / 100;
@@ -2951,7 +2834,6 @@ app.post('/api/admin/products/update/:productId', upload.array('images', 5), asy
         if (updateData.stock) product.stock = Number(updateData.stock);
         if (updateData.status) product.status = updateData.status;
         
-        // Add new images
         if (req.files && req.files.length > 0) {
             product.images = [...product.images, ...req.files.map(f => f.filename)];
         }
@@ -3064,7 +2946,6 @@ app.get('/api/admin/fund-requests', async (req, res) => {
         const requests = await FundRequest.find({ status })
             .sort({ requestDate: -1 });
         
-        // Populate user details
         const requestsWithUser = await Promise.all(
             requests.map(async (req) => {
                 const user = await User.findOne({ userId: req.userId })
@@ -3099,14 +2980,12 @@ app.post('/api/admin/fund-requests/process', async (req, res) => {
         }
         
         if (action === 'approve') {
-            // Credit to user wallet
             const user = await User.findOne({ userId: request.userId });
             user.wallet += request.amount;
             await user.save();
             
             request.status = 'approved';
             
-            // Send email
             await sendEmail(
                 user.email,
                 'Fund Request Approved - LIRA',
@@ -3178,7 +3057,6 @@ app.post('/api/admin/activation-requests/process', async (req, res) => {
         const user = await User.findOne({ userId: request.userId });
         
         if (action === 'approve') {
-            // Activate user (no income distribution)
             user.status = 'active';
             user.activationDate = new Date();
             user.expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -3186,7 +3064,6 @@ app.post('/api/admin/activation-requests/process', async (req, res) => {
             
             request.status = 'approved';
             
-            // Send email
             await sendEmail(
                 user.email,
                 'Account Activated - LIRA',
@@ -3269,11 +3146,9 @@ app.post('/api/admin/withdrawals/process', async (req, res) => {
             withdrawal.processDate = new Date();
             withdrawal.transactionId = transactionId;
             
-            // Update user's total withdrawn
             user.totalWithdrawn += withdrawal.netAmount;
             await user.save();
             
-            // Send email
             await sendEmail(
                 user.email,
                 'Withdrawal Approved - LIRA',
@@ -3292,11 +3167,9 @@ app.post('/api/admin/withdrawals/process', async (req, res) => {
         } else if (action === 'reject') {
             withdrawal.status = 'rejected';
             
-            // Refund to wallet
             user.wallet += withdrawal.amount;
             await user.save();
             
-            // Send email
             await sendEmail(
                 user.email,
                 'Withdrawal Rejected - LIRA',
@@ -3345,7 +3218,6 @@ app.get('/api/admin/income-report', async (req, res) => {
             .sort({ date: -1 })
             .limit(1000);
         
-        // Group by user
         const byUser = await Income.aggregate([
             { $match: query },
             {
@@ -3363,7 +3235,6 @@ app.get('/api/admin/income-report', async (req, res) => {
             { $sort: { totalCredited: -1 } }
         ]);
         
-        // Populate user details
         const byUserWithDetails = await Promise.all(
             byUser.map(async (item) => {
                 const user = await User.findOne({ userId: item._id })
@@ -3375,7 +3246,6 @@ app.get('/api/admin/income-report', async (req, res) => {
             })
         );
         
-        // Totals
         const totals = await Income.aggregate([
             { $match: query },
             {
@@ -3508,7 +3378,6 @@ app.post('/api/admin/rewards/check', async (req, res) => {
                             achievedDate: new Date()
                         });
                         
-                        // Notify user
                         await sendEmail(
                             user.email,
                             'Congratulations! You earned a reward!',
@@ -3607,7 +3476,6 @@ app.get('/api/admin/franchise-activity', async (req, res) => {
             .sort({ deliveryDate: -1 })
             .limit(500);
         
-        // Get franchise stats
         const franchises = await Franchise.find();
         
         const stats = await Promise.all(
@@ -3659,7 +3527,6 @@ app.post('/api/cron/check-expiry', async (req, res) => {
     try {
         const now = new Date();
         
-        // Find expired accounts
         const expired = await User.find({
             role: 'user',
             status: 'active',
@@ -3670,7 +3537,6 @@ app.post('/api/cron/check-expiry', async (req, res) => {
             user.status = 'inactive';
             await user.save();
             
-            // Notify user
             await sendEmail(
                 user.email,
                 'Account Expired - LIRA',
@@ -3685,7 +3551,6 @@ app.post('/api/cron/check-expiry', async (req, res) => {
             );
         }
         
-        // Find expiring soon (7 days)
         const expiringSoon = await User.find({
             role: 'user',
             status: 'active',
@@ -3728,7 +3593,6 @@ app.post('/api/cron/check-special-days', async (req, res) => {
     try {
         const today = new Date();
         
-        // Find birthdays
         const birthdays = await User.find({
             $expr: {
                 $and: [
@@ -3746,7 +3610,6 @@ app.post('/api/cron/check-special-days', async (req, res) => {
             );
         }
         
-        // Find anniversaries
         const anniversaries = await User.find({
             $expr: {
                 $and: [
@@ -3872,7 +3735,7 @@ async function initializeAdmin() {
             name: 'Administrator',
             mobile: '9999999999',
             email: 'admin@lira.com',
-            password: 'admin@123', // Plain text password
+            password: 'admin@123',
             position: 'left',
             role: 'admin',
             status: 'active',
@@ -3888,7 +3751,6 @@ initializeAdmin();
 
 // ==================== FRONTEND ROUTES ====================
 
-// Serve HTML files
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -4079,7 +3941,6 @@ app.get('/payout-settings', (req, res) => {
     res.sendFile(path.join(__dirname, 'payout-setting.html'));
 });
 
-// Catch all other routes to serve HTML files
 app.get('/*.html', (req, res) => {
     const filePath = path.join(__dirname, req.path);
     if (fs.existsSync(filePath)) {
@@ -4089,13 +3950,11 @@ app.get('/*.html', (req, res) => {
     }
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
 });
 
-// Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
