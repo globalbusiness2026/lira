@@ -771,7 +771,7 @@
             };
             
             try {
-                const response = await fetch('/api/admin/categories', {
+                const response = await fetch('/api/admin/categories/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(categoryData)
@@ -814,6 +814,9 @@
             e.preventDefault();
             
             const id = document.getElementById('editCatId').value;
+            const category = categories.find(c => c._id === id);
+            if (!category) return;
+            
             const categoryData = {
                 name: document.getElementById('editCatName').value,
                 purchaseRate: parseFloat(document.getElementById('editPurchaseRate').value),
@@ -825,7 +828,7 @@
             };
             
             try {
-                const response = await fetch(`/api/admin/categories/${id}`, {
+                const response = await fetch(`/api/admin/categories/${category.name}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(categoryData)
@@ -847,8 +850,11 @@
         async function deleteCategory(id) {
             if (!confirm('Are you sure? This will affect all products in this category.')) return;
             
+            const category = categories.find(c => c._id === id);
+            if (!category) return;
+            
             try {
-                const response = await fetch(`/api/admin/categories/${id}`, {
+                const response = await fetch(`/api/admin/categories/${category.name}`, {
                     method: 'DELETE'
                 });
                 
@@ -915,7 +921,7 @@
             }
             
             try {
-                const response = await fetch('/api/admin/products', {
+                const response = await fetch('/api/admin/products/add', {
                     method: 'POST',
                     body: formData
                 });
@@ -927,6 +933,8 @@
                     document.getElementById('productForm').reset();
                     document.getElementById('imagePreview').innerHTML = '';
                     loadProducts();
+                } else {
+                    alert(data.error || 'Failed to add product');
                 }
             } catch (error) {
                 console.error('Error adding product:', error);
@@ -936,9 +944,9 @@
         // Load products
         async function loadProducts() {
             try {
-                const response = await fetch('/api/admin/products');
+                const response = await fetch('/api/admin/products?status=all');
                 const data = await response.json();
-                products = data;
+                products = data.products || data;
                 
                 const tbody = document.getElementById('productsList');
                 
