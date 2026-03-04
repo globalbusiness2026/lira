@@ -189,7 +189,7 @@
                 <div class="form-group otp-input-group" id="otpGroup" style="display: none;">
                     <label class="form-label">Email OTP</label>
                     <div style="display: flex; gap: 10px;">
-                        <input type="text" class="form-control" id="otp" placeholder="Enter 6-digit OTP" maxlength="6">
+                        <input type="text" class="form-control" id="otp" placeholder="Enter 6-digit OTP" maxlength="6" pattern="[0-9]{6}">
                         <button type="button" class="btn btn-outline" id="verifyOtpBtn">Verify</button>
                     </div>
                     <small style="color: var(--gray); margin-top: 5px; display: block;">OTP sent to your email. Please check inbox.</small>
@@ -210,7 +210,6 @@
     </div>
 
     <script>
-        let selectedPosition = 'auto';
         let otpVerified = false;
         let otpSent = false;
         
@@ -219,8 +218,8 @@
             const messageBox = document.getElementById('messageBox');
             messageBox.className = `message-box ${type}`;
             messageBox.textContent = message;
+            messageBox.style.display = 'block';
             
-            // Auto hide after 5 seconds
             setTimeout(() => {
                 messageBox.style.display = 'none';
             }, 5000);
@@ -236,7 +235,6 @@
                 return;
             }
             
-            // Email validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 showMessage('Please enter a valid email address', 'error');
@@ -244,30 +242,31 @@
             }
             
             try {
-                // Disable button and show loading
                 sendBtn.disabled = true;
                 sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
                 
-                // Call your OTP API endpoint
+                console.log('Sending OTP request for:', email);
+                
                 const response = await fetch('/api/send-otp', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({ email })
                 });
                 
-                const data = await response.json();
+                console.log('Response status:', response.status);
                 
-                if (data.success) {
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok && data.success) {
                     otpSent = true;
                     document.getElementById('otpGroup').style.display = 'block';
                     showMessage('OTP sent to your email. Please check your inbox.', 'success');
-                    
-                    // Reset button
                     sendBtn.innerHTML = 'Resend OTP';
                     sendBtn.disabled = false;
-                    
-                    // Enable register button only after OTP verification
-                    // (will be enabled by verify button)
                 } else {
                     showMessage(data.error || 'Failed to send OTP', 'error');
                     sendBtn.innerHTML = 'Send OTP';
@@ -275,7 +274,7 @@
                 }
             } catch (error) {
                 console.error('Error sending OTP:', error);
-                showMessage('Failed to send OTP. Please try again.', 'error');
+                showMessage('Network error. Please try again.', 'error');
                 sendBtn.innerHTML = 'Send OTP';
                 sendBtn.disabled = false;
             }
@@ -284,9 +283,10 @@
         // Verify OTP
         document.getElementById('verifyOtpBtn').addEventListener('click', async function() {
             const otp = document.getElementById('otp').value;
+            const email = document.getElementById('email').value;
             const verifyBtn = this;
             
-            if (!otp || otp.length !== 6) {
+            if (!otp || otp.length !== 6 || !/^\d+$/.test(otp)) {
                 showMessage('Please enter valid 6-digit OTP', 'error');
                 return;
             }
@@ -295,19 +295,23 @@
                 verifyBtn.disabled = true;
                 verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
                 
-                // Call your verify OTP API endpoint
+                console.log('Verifying OTP for:', email);
+                
                 const response = await fetch('/api/verify-otp', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        email: document.getElementById('email').value,
-                        otp: otp 
-                    })
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ email, otp })
                 });
                 
-                const data = await response.json();
+                console.log('Verify response status:', response.status);
                 
-                if (data.success) {
+                const data = await response.json();
+                console.log('Verify response data:', data);
+                
+                if (response.ok && data.success) {
                     otpVerified = true;
                     document.getElementById('registerBtn').disabled = false;
                     document.getElementById('otpGroup').style.display = 'none';
@@ -321,7 +325,7 @@
                 }
             } catch (error) {
                 console.error('Error verifying OTP:', error);
-                showMessage('Failed to verify OTP. Please try again.', 'error');
+                showMessage('Network error. Please try again.', 'error');
                 verifyBtn.disabled = false;
                 verifyBtn.innerHTML = 'Verify';
             }
@@ -346,7 +350,7 @@
                 name: document.getElementById('name').value,
                 mobile: document.getElementById('mobile').value,
                 email: document.getElementById('email').value,
-                position: 'auto' // Always auto for binary tree placement
+                position: 'auto'
             };
             
             const registerBtn = document.getElementById('registerBtn');
@@ -355,21 +359,28 @@
                 registerBtn.disabled = true;
                 registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
                 
+                console.log('Sending registration request:', formData);
+                
                 const response = await fetch('/api/register', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify(formData)
                 });
                 
-                const data = await response.json();
+                console.log('Register response status:', response.status);
                 
-                if (data.success) {
+                const data = await response.json();
+                console.log('Register response data:', data);
+                
+                if (response.ok && data.success) {
                     showMessage(`Registration successful! User ID: ${data.userId}\nPassword: ${data.password}`, 'success');
                     
-                    // Redirect to login page after 2 seconds
                     setTimeout(() => {
                         window.location.href = '/login';
-                    }, 2000);
+                    }, 3000);
                 } else {
                     showMessage(data.error || 'Registration failed', 'error');
                     registerBtn.disabled = false;
@@ -377,22 +388,10 @@
                 }
             } catch (error) {
                 console.error('Registration error:', error);
-                showMessage('Registration failed. Please try again.', 'error');
+                showMessage('Network error. Please try again.', 'error');
                 registerBtn.disabled = false;
                 registerBtn.innerHTML = 'Register Now';
             }
-        });
-        
-        // Enable/disable register button based on OTP verification
-        document.getElementById('registerBtn').disabled = !otpVerified;
-        
-        // Auto-enable after OTP verification
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.attributeName === 'disabled') {
-                    document.getElementById('registerBtn').disabled = !otpVerified;
-                }
-            });
         });
     </script>
 </body>
