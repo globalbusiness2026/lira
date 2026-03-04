@@ -369,12 +369,14 @@ const Reward = mongoose.model('Reward', rewardSchema);
 const Award = mongoose.model('Award', awardSchema);
 const Delivery = mongoose.model('Delivery', deliverySchema);
 
-// ==================== EMAIL CONFIG ====================
+// ==================== EMAIL CONFIG (Maileroo - FREE 3000/month) ====================
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.maileroo.com',
+    port: 587,
+    secure: false,
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS.replace(/ /g, '')
+        user: 'apikey', // ⚠️ IMPORTANT: YEH EXACT 'apikey' LIKHNA HAI
+        pass: process.env.MAILEROO_API_KEY
     },
     tls: {
         rejectUnauthorized: false
@@ -468,7 +470,7 @@ async function sendEmail(to, subject, html) {
         console.log(`📧 Attempting to send email to: ${to}`);
         
         const mailOptions = {
-            from: `"LIRA MLM" <${process.env.EMAIL_USER}>`,
+            from: `"LIRA MLM" <gbusiness051@gmail.com>`, // Sender email (verified in Maileroo)
             to,
             subject,
             html
