@@ -144,7 +144,7 @@ const userSchema = new mongoose.Schema({
     }]
 });
 
-// ========== FIXED: PURITY FIELD HATAYA ==========
+// Product Schema - PURITY COMPLETELY REMOVED
 const productSchema = new mongoose.Schema({
     productId: { type: String, unique: true },
     name: String,
@@ -153,7 +153,7 @@ const productSchema = new mongoose.Schema({
     description: String,
     images: [String],
     weight: Number,
-    // purity field completely removed
+    // purity field removed
     makingCharge: Number,
     packingCharge: Number,
     deliveryCharge: Number,
@@ -2606,7 +2606,7 @@ app.post('/api/admin/login', async (req, res) => {
     }
 });
 
-// ✅ Get All Categories
+// Get All Categories
 app.get('/api/admin/categories', async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -2621,7 +2621,7 @@ app.get('/api/admin/categories', async (req, res) => {
     }
 });
 
-// ✅ Add Category
+// Add Category
 app.post('/api/admin/categories/add', async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -2630,7 +2630,6 @@ app.post('/api/admin/categories/add', async (req, res) => {
         
         const { name, purchaseRate, expense, making, packing, deliveryCharge, gst } = req.body;
         
-        // Check if category exists
         const existing = await Category.findOne({ name });
         if (existing) {
             return res.status(400).json({ success: false, error: 'Category already exists' });
@@ -2658,7 +2657,7 @@ app.post('/api/admin/categories/add', async (req, res) => {
     }
 });
 
-// ✅ Update Category
+// Update Category
 app.put('/api/admin/categories/:name', async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -2695,7 +2694,7 @@ app.put('/api/admin/categories/:name', async (req, res) => {
     }
 });
 
-// ✅ Delete Category
+// Delete Category
 app.delete('/api/admin/categories/:name', async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -2719,7 +2718,7 @@ app.delete('/api/admin/categories/:name', async (req, res) => {
     }
 });
 
-// ✅ Get All Products
+// Get All Products
 app.get('/api/admin/products', async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -2743,7 +2742,7 @@ app.get('/api/admin/products', async (req, res) => {
     }
 });
 
-// ✅ FIXED: Add Product (Purity field completely removed)
+// ✅ FIXED: Add Product - Complete working version
 app.post('/api/admin/products/add', upload.array('images', 5), async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -2755,17 +2754,68 @@ app.post('/api/admin/products/add', upload.array('images', 5), async (req, res) 
             weight, price, bv, dp, stock
         } = req.body;
         
-        // Get category settings for calculations
+        // Validate required fields
+        if (!name || !category || !weight || !price || !bv || !dp || !stock) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'All fields are required' 
+            });
+        }
+        
+        // Convert to numbers
+        const numericPrice = parseFloat(price);
+        const numericWeight = parseFloat(weight);
+        const numericBv = parseFloat(bv);
+        const numericDp = parseFloat(dp);
+        const numericStock = parseInt(stock);
+        
+        // Validate numbers
+        if (isNaN(numericPrice) || numericPrice <= 0) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Price must be a valid positive number' 
+            });
+        }
+        
+        if (isNaN(numericWeight) || numericWeight <= 0) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Weight must be a valid positive number' 
+            });
+        }
+        
+        if (isNaN(numericBv) || numericBv < 0) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'BV must be a valid number' 
+            });
+        }
+        
+        if (isNaN(numericDp) || numericDp < 0) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'DP must be a valid number' 
+            });
+        }
+        
+        if (isNaN(numericStock) || numericStock < 0) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Stock must be a valid number' 
+            });
+        }
+        
+        // Get category settings
         const categoryData = await Category.findOne({ name: category });
         if (!categoryData) {
             return res.status(400).json({ success: false, error: 'Category not found' });
         }
         
-        // Calculate charges based on category
-        const makingCharge = (Number(price) * categoryData.making) / 100;
-        const packingCharge = (Number(price) * categoryData.packing) / 100;
-        const deliveryCharge = (Number(price) * categoryData.deliveryCharge) / 100;
-        const gst = (Number(price) * categoryData.gst) / 100;
+        // Calculate charges
+        const makingCharge = (numericPrice * categoryData.making) / 100;
+        const packingCharge = (numericPrice * categoryData.packing) / 100;
+        const deliveryCharge = (numericPrice * categoryData.deliveryCharge) / 100;
+        const gst = (numericPrice * categoryData.gst) / 100;
         
         const productId = 'PROD' + Date.now() + Math.floor(Math.random() * 1000);
         
@@ -2776,16 +2826,15 @@ app.post('/api/admin/products/add', upload.array('images', 5), async (req, res) 
             subCategory: subCategory || '',
             description: description || '',
             images: req.files?.map(f => f.filename) || [],
-            weight: Number(weight),
-            // purity field completely removed
+            weight: numericWeight,
             makingCharge,
             packingCharge,
             deliveryCharge,
             gst,
-            price: Number(price),
-            bv: Number(bv),
-            dp: Number(dp),
-            stock: Number(stock)
+            price: numericPrice,
+            bv: numericBv,
+            dp: numericDp,
+            stock: numericStock
         });
         
         res.json({
@@ -2796,11 +2845,14 @@ app.post('/api/admin/products/add', upload.array('images', 5), async (req, res) 
         
     } catch (error) {
         console.error('Add product error:', error);
-        res.status(500).json({ success: false, error: 'Failed to add product: ' + error.message });
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to add product: ' + error.message 
+        });
     }
 });
 
-// ✅ FIXED: Update Product (Purity field completely removed)
+// Update Product
 app.post('/api/admin/products/update/:productId', upload.array('images', 5), async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -2814,17 +2866,15 @@ app.post('/api/admin/products/update/:productId', upload.array('images', 5), asy
         
         const updateData = req.body;
         
-        // Update fields
         if (updateData.name) product.name = updateData.name;
         if (updateData.category) product.category = updateData.category;
         if (updateData.subCategory) product.subCategory = updateData.subCategory;
         if (updateData.description) product.description = updateData.description;
         if (updateData.weight) product.weight = Number(updateData.weight);
-        // purity field handling completely removed
+        
         if (updateData.price) {
             product.price = Number(updateData.price);
             
-            // Recalculate charges if price changed
             const categoryData = await Category.findOne({ name: product.category });
             if (categoryData) {
                 product.makingCharge = (product.price * categoryData.making) / 100;
@@ -2833,12 +2883,12 @@ app.post('/api/admin/products/update/:productId', upload.array('images', 5), asy
                 product.gst = (product.price * categoryData.gst) / 100;
             }
         }
+        
         if (updateData.bv) product.bv = Number(updateData.bv);
         if (updateData.dp) product.dp = Number(updateData.dp);
         if (updateData.stock) product.stock = Number(updateData.stock);
         if (updateData.status) product.status = updateData.status;
         
-        // Add new images
         if (req.files && req.files.length > 0) {
             product.images = [...product.images, ...req.files.map(f => f.filename)];
         }
@@ -2857,7 +2907,7 @@ app.post('/api/admin/products/update/:productId', upload.array('images', 5), asy
     }
 });
 
-// ✅ Delete Product
+// Delete Product
 app.delete('/api/admin/products/:productId', async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -3064,7 +3114,7 @@ app.get('/api/admin/members', async (req, res) => {
     }
 });
 
-// Update Member (Admin)
+// Update Member
 app.post('/api/admin/members/update', async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -3259,7 +3309,7 @@ app.post('/api/admin/activation-requests/process', async (req, res) => {
     }
 });
 
-// Get Withdrawal Requests (Admin)
+// Get Withdrawal Requests
 app.get('/api/admin/withdrawals', async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -3517,7 +3567,7 @@ app.post('/api/admin/rewards/add', upload.single('image'), async (req, res) => {
     }
 });
 
-// Check and Award Rewards (Cron job - can be called manually)
+// Check and Award Rewards
 app.post('/api/admin/rewards/check', async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -3568,7 +3618,7 @@ app.post('/api/admin/rewards/check', async (req, res) => {
     }
 });
 
-// Get All Orders (Admin)
+// Get All Orders
 app.get('/api/admin/orders', async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -3600,7 +3650,7 @@ app.get('/api/admin/orders', async (req, res) => {
     }
 });
 
-// Update Order Status (Admin)
+// Update Order Status
 app.post('/api/admin/orders/update', async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -3687,7 +3737,7 @@ app.get('/api/admin/franchise-activity', async (req, res) => {
 
 // ==================== CRON JOBS ====================
 
-// Check expiring/expired accounts (run daily)
+// Check expiring/expired accounts
 app.post('/api/cron/check-expiry', async (req, res) => {
     try {
         const now = new Date();
@@ -3753,7 +3803,7 @@ app.post('/api/cron/check-expiry', async (req, res) => {
     }
 });
 
-// Check birthdays and anniversaries (run daily)
+// Check birthdays and anniversaries
 app.post('/api/cron/check-special-days', async (req, res) => {
     try {
         const today = new Date();
