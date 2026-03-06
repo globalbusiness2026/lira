@@ -144,6 +144,7 @@ const userSchema = new mongoose.Schema({
     }]
 });
 
+// ========== FIXED: PURITY FIELD HATAYA ==========
 const productSchema = new mongoose.Schema({
     productId: { type: String, unique: true },
     name: String,
@@ -152,7 +153,7 @@ const productSchema = new mongoose.Schema({
     description: String,
     images: [String],
     weight: Number,
-    purity: String,
+    // purity field completely removed
     makingCharge: Number,
     packingCharge: Number,
     deliveryCharge: Number,
@@ -2742,7 +2743,7 @@ app.get('/api/admin/products', async (req, res) => {
     }
 });
 
-// ✅ Add Product
+// ✅ FIXED: Add Product (Purity field completely removed)
 app.post('/api/admin/products/add', upload.array('images', 5), async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -2751,7 +2752,7 @@ app.post('/api/admin/products/add', upload.array('images', 5), async (req, res) 
         
         const {
             name, category, subCategory, description,
-            weight, purity, price, bv, dp, stock
+            weight, price, bv, dp, stock
         } = req.body;
         
         // Get category settings for calculations
@@ -2772,11 +2773,11 @@ app.post('/api/admin/products/add', upload.array('images', 5), async (req, res) 
             productId,
             name,
             category,
-            subCategory,
-            description,
+            subCategory: subCategory || '',
+            description: description || '',
             images: req.files?.map(f => f.filename) || [],
             weight: Number(weight),
-            purity,
+            // purity field completely removed
             makingCharge,
             packingCharge,
             deliveryCharge,
@@ -2795,11 +2796,11 @@ app.post('/api/admin/products/add', upload.array('images', 5), async (req, res) 
         
     } catch (error) {
         console.error('Add product error:', error);
-        res.status(500).json({ success: false, error: 'Failed to add product' });
+        res.status(500).json({ success: false, error: 'Failed to add product: ' + error.message });
     }
 });
 
-// ✅ Update Product
+// ✅ FIXED: Update Product (Purity field completely removed)
 app.post('/api/admin/products/update/:productId', upload.array('images', 5), async (req, res) => {
     try {
         if (req.session.role !== 'admin') {
@@ -2819,7 +2820,7 @@ app.post('/api/admin/products/update/:productId', upload.array('images', 5), asy
         if (updateData.subCategory) product.subCategory = updateData.subCategory;
         if (updateData.description) product.description = updateData.description;
         if (updateData.weight) product.weight = Number(updateData.weight);
-        if (updateData.purity) product.purity = updateData.purity;
+        // purity field handling completely removed
         if (updateData.price) {
             product.price = Number(updateData.price);
             
@@ -2852,7 +2853,7 @@ app.post('/api/admin/products/update/:productId', upload.array('images', 5), asy
         
     } catch (error) {
         console.error('Update product error:', error);
-        res.status(500).json({ success: false, error: 'Failed to update product' });
+        res.status(500).json({ success: false, error: 'Failed to update product: ' + error.message });
     }
 });
 
